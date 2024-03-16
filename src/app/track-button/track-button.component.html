@@ -1,4 +1,8 @@
 <div id="container">
-  <ion-button size="large" shape="round" (click)="getCurrentPosition">AVVIA</ion-button><br><br><br>
-  <ion-label *ngIf="currentPosition">{{currentPosition}}</ion-label>
+  <div>
+  <ion-button *ngIf="!tracking" size="large" shape="round" (click)="startTracking()">AVVIA</ion-button>
+  <ion-button *ngIf="tracking" size="large" shape="round" (click)="stopTracking()">STOP</ion-button>
+</div><br>
+
+  <ion-label *ngIf="currentPosition">{{currentPosition.coords.latitude}} - {{currentPosition.coords.longitude}}</ion-label>
 </div>
