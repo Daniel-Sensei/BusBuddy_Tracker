@@ -1,0 +1,8 @@
+{
+  "name": "BusBus-Tracker",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "ec0eae38"
+}
