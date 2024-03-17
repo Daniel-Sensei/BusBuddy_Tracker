@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
-import { Firestore } from '@angular/fire/firestore';
-import { GeoPoint, collection, doc, setDoc } from 'firebase/firestore';
-import { updateDoc } from 'firebase/firestore';
+import { getDatabase, ref, set } from 'firebase/database';
+import { initializeApp } from 'firebase/app';
+
 
 @Component({
   selector: 'app-track-button',
@@ -14,8 +14,24 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   currentPosition: GeolocationPosition | undefined;
   watchId: string | undefined;
   tracking = false;
+  firebaseDB: any;
 
-  constructor(private firestore: Firestore) { }
+
+  constructor() {
+    // Inizializza il Realtime Database di Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXBzmUtfz_xcBTMmhcEvQdWO1GEArn5wA",
+      authDomain: "busbus-19997.firebaseapp.com",
+      databaseURL: "https://busbus-19997-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "busbus-19997",
+      storageBucket: "busbus-19997.appspot.com",
+      messagingSenderId: "1044655569384",
+      appId: "1:1044655569384:web:f01efa60cfd6d7cfca0c5d",
+      measurementId: "G-91JVDWWYCN"
+    };
+
+    this.firebaseDB = getDatabase(initializeApp(firebaseConfig));
+  }
 
   ngOnInit() {
     this.getCurrentPosition();
@@ -65,11 +81,11 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
           console.error('Error watching position', err);
         } else {
           this.currentPosition = position || undefined;
-          // Aggiorna il database Firebase con la nuova posizione
-        if (this.currentPosition) {
-          console.log('Updating position', this.currentPosition);
-          this.updateFirebaseDatabase(this.currentPosition);
-        }
+          // Aggiorna il Realtime Database di Firebase con la nuova posizione
+          if (this.currentPosition) {
+            console.log('Updating position', this.currentPosition);
+            this.updateFirebaseDatabase(this.currentPosition);
+          }
         }
       });
     } catch (error) {
@@ -77,20 +93,12 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ...
-
   updateFirebaseDatabase(position: GeolocationPosition) {
-    // Aggiorna il database Firebase con la nuova posizione
-    const busesCollection = collection(this.firestore, 'buses');
-    // Aggiorna il bus con id 1
-    const busDoc = doc(busesCollection, '1');
-
-    // Creazione di un oggetto GeoPoint
-    const geoPoint = new GeoPoint(position.coords.latitude, position.coords.longitude);
-
-    // Aggiornamento del documento con il campo coords
-    updateDoc(busDoc, {
-      coords: geoPoint
+    // Aggiorna il Realtime Database di Firebase con la nuova posizione
+    const dbRef = ref(this.firebaseDB, 'buses/bus1/coords');
+    set(dbRef, {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
     })
     .then(() => console.log('Position updated successfully'))
     .catch(error => console.error('Error updating position', error));
