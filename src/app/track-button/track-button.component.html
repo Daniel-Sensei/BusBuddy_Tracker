@@ -4,5 +4,5 @@
   <ion-button *ngIf="tracking" size="large" shape="round" (click)="stopTracking()">STOP</ion-button>
 </div><br>
 
-  <ion-label *ngIf="currentPosition">{{currentPosition.coords.latitude}} - {{currentPosition.coords.longitude}}</ion-label>
+  <ion-label *ngIf="this.bus.coords.latitude !=0 && this.bus.coords.longitude !=0">{{this.bus.coords.latitude}} - {{this.bus.coords.longitude}}</ion-label>
 </div>
