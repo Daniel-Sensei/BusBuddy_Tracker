@@ -1,5 +1,6 @@
 export interface Bus {
     id: string;
+    code: string;
     coords: {
         latitude: number;
         longitude: number;

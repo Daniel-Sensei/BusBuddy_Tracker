@@ -19,6 +19,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   bus: Bus = {
     id: 'yeUuxiXId0yb3uvBdEL5', //TODO: Replace with your bus ID by authenticating with Firebase
+    code: 'CH349ZY',
     coords: {
       latitude: 0,
       longitude: 0
@@ -36,6 +37,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   constructor(private busService: BusService) {
     // Initialize Realtime Database
+    /*
     const firebaseConfig = {
       apiKey: "AIzaSyAXBzmUtfz_xcBTMmhcEvQdWO1GEArn5wA",
       authDomain: "busbus-19997.firebaseapp.com",
@@ -48,6 +50,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     };
 
     this.firebaseDB = getDatabase(initializeApp(firebaseConfig));
+    */
   }
 
   ngOnInit() {
