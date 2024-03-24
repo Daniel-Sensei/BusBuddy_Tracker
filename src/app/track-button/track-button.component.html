@@ -1,6 +1,6 @@
 <div id="container">
   <div>
-  <ion-button *ngIf="!tracking" size="large" shape="round" (click)="startTracking()">AVVIA</ion-button>
+  <ion-button *ngIf="!tracking" size="large" shape="round" (click)="startTracking()" [disabled]="this.bus.id == ''">AVVIA</ion-button>
   <ion-button *ngIf="tracking" size="large" shape="round" (click)="stopTracking()">STOP</ion-button>
 </div><br>
 

@@ -1,3 +1,5 @@
+import { Route } from './Route';
+
 export interface Bus {
     id: string;
     code: string;
@@ -6,14 +8,7 @@ export interface Bus {
         longitude: number;
     };
 
-    stops: {
-        forwardStops: {
-        };
-        backStops: {
-        }
-    };
-
-    routeId: string;
+    route: Route;
     direction: string;
     lastStop: number;
 }

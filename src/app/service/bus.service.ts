@@ -15,6 +15,11 @@ export class BusService {
     return this.http.get(this.BACKEND_API + "stopsByBus?busId=" + busId);
   }
 
+  public getBusByCode(code: string, token: string): Observable<any> {
+    const body = { code: code, token: token };
+    return this.http.post(this.BACKEND_API + "busByCode", body);
+  }
+
   public updateStopReached(routeId: string, stopIndex: string, direction: string): Observable<boolean> {
     return this.http.post<boolean>(this.BACKEND_API + "stopReached?routeId=" + routeId + "&stopIndex=" + stopIndex + "&direction=" + direction, null);
   }

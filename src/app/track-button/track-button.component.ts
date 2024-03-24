@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
-import { ref, set } from 'firebase/database';
+import { ref, set, getDatabase } from 'firebase/database';
 import { Bus } from '../model/Bus';
 import { BusService } from '../service/bus.service';
 import { LoginService } from '../service/login.service';
@@ -17,42 +17,60 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   tracking = false;
   firebaseDB: any;
 
+
   bus: Bus = {
-    id: 'yeUuxiXId0yb3uvBdEL5', //TODO: Replace with your bus ID by authenticating with Firebase
+    id: '', //TODO: Replace with your bus ID by authenticating with Firebase
     code: 'CH349ZY',
     coords: {
       latitude: 0,
       longitude: 0
     },
-    stops: {
-      forwardStops: {},
-      backStops: {}
+
+    route: {
+      id: '',
+      company: '',
+      code: '',
+      coords: {
+        latitude: 0,
+        longitude: 0,
+      },
+
+      stops: {
+        forwardStops: {
+        },
+        backStops: {
+        },
+      },
     },
-    routeId: 'kVlMBtfwBjcUefPaBn4g',
     direction: '',
     lastStop: -1
   };
 
   lastDirection = '';
+  token = '';
 
   options: PositionOptions = {
     enableHighAccuracy: true
   };
 
   constructor(private busService: BusService, private loginService: LoginService) {
+    this.firebaseDB = getDatabase();  
   }
 
   ngOnInit() {
-    this.getBus();
-    this.getStops();
-    this.getBusCoords();
+    //this.getBusCoords();
+    //TODO: Token must be passed in Input from login component or taken by the memory of the device
+    this.getToken();
+  }
 
-    /*
+  async getToken() {
     this.loginService.login("consorzio.autolinee@cosenza.it", "consorzio")
       .then(token => {
         if (token) {
           console.log('Accesso riuscito. Token:', token);
+          this.token = token;
           // Esegui le operazioni necessarie dopo l'accesso
+          this.getBus(this.bus.code, this.token);
         } else {
           console.log('Accesso non riuscito.');
           // Gestisci il fallimento dell'accesso
@@ -62,22 +80,18 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
         console.error('Errore durante il login:', error);
         // Gestisci gli errori di autenticazione
       });
-    */
-
   }
 
-  getBus() {
 
-  }
-
-  getStops() {
-    this.busService.getStopsByBus(this.bus.id).subscribe(
+  getBus(code: string, token: string) {
+    this.busService.getBusByCode(code, token).subscribe(
       (data: any) => {
-        this.bus.stops = data;
-        console.log('Stops loaded', this.bus);
+        this.bus = data;
+        console.log('Bus loaded', this.bus);
+        //this.startTracking();
       },
       error => {
-        console.error('Error getting stops', error);
+        console.error('Error getting bus', error);
       }
     );
   }
@@ -87,7 +101,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     this.stopTracking();
   }
 
-  async chechGeolocationPermission() {
+  async checkGeolocationPermission() {
     const permissionStatus = await Geolocation.checkPermissions();
     if (permissionStatus.location !== 'granted') {
       const requestStatus = await Geolocation.requestPermissions();
@@ -99,7 +113,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   async getBusCoords() {
     try {
-      this.chechGeolocationPermission();
+      this.checkGeolocationPermission();
 
       this.bus.coords = (await Geolocation.getCurrentPosition(this.options)).coords;
     } catch (error) {
@@ -109,7 +123,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   async startTracking() {
     try {
-      this.chechGeolocationPermission();
+      this.checkGeolocationPermission();
 
       const options: PositionOptions = {
         enableHighAccuracy: true
@@ -124,10 +138,12 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
           this.bus.coords.longitude = position?.coords.longitude || 0;
           // Aggiorna il Realtime Database di Firebase con la nuova posizione
           if (this.bus.coords.latitude !== 0 && this.bus.coords.longitude !== 0) {
+            console.log('Position in updating', this.bus.coords);
             this.updateRealTimeCoords(this.bus.coords);
+            console.log('Position updated');
 
             if (this.checkStopReached(this.bus.coords)) {
-              this.busService.updateStopReached(this.bus.routeId, this.bus.lastStop.toString(), this.bus.direction).subscribe(
+              this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction).subscribe(
                 (data: boolean) => {
                   console.log('Stop reached updated', data);
                 },
@@ -146,7 +162,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   updateRealTimeCoords(coords: any) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
+    console.log('Updating position before ref', coords);
     const dbRef = ref(this.firebaseDB, 'buses/' + this.bus.id + '/coords');
+    console.log("dbRef", dbRef);
     set(dbRef, {
       latitude: coords.latitude,
       longitude: coords.longitude
@@ -177,8 +195,8 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
       }
     } else {
       console.log('Direction not set');
-      const stopsForward = this.bus.stops.forwardStops;
-      const stopsBack = this.bus.stops.backStops;
+      const stopsForward = this.bus.route.stops.forwardStops;
+      const stopsBack = this.bus.route.stops.backStops;
 
       stopReached = this.checkStopsInDirection(stopsForward, busCoords) || this.checkStopsInDirection(stopsBack, busCoords);
     }
@@ -189,9 +207,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   getStopsByDirection(): any[] {
     let stops = {};
     if (this.bus.direction === 'forward') {
-      stops = this.bus.stops.forwardStops;
+      stops = this.bus.route.stops.forwardStops;
     } else if (this.bus.direction === 'back') {
-      stops = this.bus.stops.backStops;
+      stops = this.bus.route.stops.backStops;
     }
     return Object.values(stops);
   }
@@ -218,10 +236,10 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   }
 
   updateDirectionAndStop() {
-    if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.stops.forwardStops).length - 1) {
+    if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1) {
       this.bus.direction = 'back';
       this.bus.lastStop = 0;
-    } else if (this.bus.direction === 'back' && this.bus.lastStop === Object.keys(this.bus.stops.backStops).length - 1) {
+    } else if (this.bus.direction === 'back' && this.bus.lastStop === Object.keys(this.bus.route.stops.backStops).length - 1) {
       this.bus.direction = 'forward';
       this.bus.lastStop = 0;
     }
