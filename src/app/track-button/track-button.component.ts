@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
-import { getDatabase, ref, set } from 'firebase/database';
-import { initializeApp } from 'firebase/app';
+import { ref, set } from 'firebase/database';
 import { Bus } from '../model/Bus';
 import { BusService } from '../service/bus.service';
+import { LoginService } from '../service/login.service';
 
 
 @Component({
@@ -35,27 +35,39 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   lastDirection = '';
 
-  constructor(private busService: BusService) {
-    // Initialize Realtime Database
-    /*
-    const firebaseConfig = {
-      apiKey: "AIzaSyAXBzmUtfz_xcBTMmhcEvQdWO1GEArn5wA",
-      authDomain: "busbus-19997.firebaseapp.com",
-      databaseURL: "https://busbus-19997-default-rtdb.europe-west1.firebasedatabase.app", // URL Realtime Database
-      projectId: "busbus-19997",
-      storageBucket: "busbus-19997.appspot.com",
-      messagingSenderId: "1044655569384",
-      appId: "1:1044655569384:web:f01efa60cfd6d7cfca0c5d",
-      measurementId: "G-91JVDWWYCN"
-    };
+  options: PositionOptions = {
+    enableHighAccuracy: true
+  };
 
-    this.firebaseDB = getDatabase(initializeApp(firebaseConfig));
-    */
+  constructor(private busService: BusService, private loginService: LoginService) {
   }
 
   ngOnInit() {
+    this.getBus();
     this.getStops();
     this.getBusCoords();
+
+    /*
+    this.loginService.login("consorzio.autolinee@cosenza.it", "consorzio")
+      .then(token => {
+        if (token) {
+          console.log('Accesso riuscito. Token:', token);
+          // Esegui le operazioni necessarie dopo l'accesso
+        } else {
+          console.log('Accesso non riuscito.');
+          // Gestisci il fallimento dell'accesso
+        }
+      })
+      .catch(error => {
+        console.error('Errore durante il login:', error);
+        // Gestisci gli errori di autenticazione
+      });
+    */
+
+  }
+
+  getBus() {
+
   }
 
   getStops() {
@@ -75,20 +87,21 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     this.stopTracking();
   }
 
+  async chechGeolocationPermission() {
+    const permissionStatus = await Geolocation.checkPermissions();
+    if (permissionStatus.location !== 'granted') {
+      const requestStatus = await Geolocation.requestPermissions();
+      if (requestStatus.location !== 'granted') {
+        throw new Error('Permission not granted');
+      }
+    }
+  }
+
   async getBusCoords() {
     try {
-      const permissionStatus = await Geolocation.checkPermissions();
-      if (permissionStatus.location !== 'granted') {
-        const requestStatus = await Geolocation.requestPermissions();
-        if (requestStatus.location !== 'granted') {
-          throw new Error('Permission not granted');
-        }
-      }
+      this.chechGeolocationPermission();
 
-      const options: PositionOptions = {
-        enableHighAccuracy: true
-      };
-      this.bus.coords = (await Geolocation.getCurrentPosition(options)).coords;
+      this.bus.coords = (await Geolocation.getCurrentPosition(this.options)).coords;
     } catch (error) {
       console.error('Error getting current position', error);
     }
@@ -96,13 +109,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   async startTracking() {
     try {
-      const permissionStatus = await Geolocation.checkPermissions();
-      if (permissionStatus.location !== 'granted') {
-        const requestStatus = await Geolocation.requestPermissions();
-        if (requestStatus.location !== 'granted') {
-          throw new Error('Permission not granted');
-        }
-      }
+      this.chechGeolocationPermission();
 
       const options: PositionOptions = {
         enableHighAccuracy: true
