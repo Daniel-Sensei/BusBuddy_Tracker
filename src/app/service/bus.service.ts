@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class BusService {
 
-  readonly BACKEND_API = 'http://localhost:8080/';
+  readonly BACKEND_API = 'https://bus-bus.onrender.com/';
 
   constructor(private http: HttpClient) { }
 
