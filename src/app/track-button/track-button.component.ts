@@ -5,6 +5,9 @@ import { Bus } from '../model/Bus';
 import { BusService } from '../service/bus.service';
 import { LoginService } from '../service/login.service';
 
+import {registerPlugin} from "@capacitor/core";
+import {BackgroundGeolocationPlugin} from "@capacitor-community/background-geolocation";
+
 
 @Component({
   selector: 'app-track-button',
@@ -16,6 +19,8 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   watchId: string | undefined;
   tracking = false;
   firebaseDB: any;
+
+  BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
 
 
   bus: Bus = {

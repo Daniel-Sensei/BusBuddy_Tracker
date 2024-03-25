@@ -6,6 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'www',
   server: {
     androidScheme: 'https'
+  },
+  android: {
+    useLegacyBridge: true // Aggiungi questa riga per abilitare l'opzione useLegacyBridge
   }
 };
 
