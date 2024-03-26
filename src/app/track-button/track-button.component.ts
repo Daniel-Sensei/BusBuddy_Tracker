@@ -1,12 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
 import { ref, set, getDatabase } from 'firebase/database';
 import { Bus } from '../model/Bus';
 import { BusService } from '../service/bus.service';
 import { LoginService } from '../service/login.service';
 
-import {registerPlugin} from "@capacitor/core";
-import {BackgroundGeolocationPlugin} from "@capacitor-community/background-geolocation";
+import { registerPlugin } from "@capacitor/core";
+import { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 
@@ -17,10 +16,9 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 })
 export class TrackButtonComponent implements OnInit, OnDestroy {
 
-  watchId: string | undefined;
   tracking = false;
   firebaseDB: any;
-
+  watcherId: any;
   BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
 
 
@@ -55,21 +53,22 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   lastDirection = '';
   token = '';
 
-  options: PositionOptions = {
-    enableHighAccuracy: true
+  // Used by the Geolocation API to get the current position
+  options = {
+    backgroundMessage: "Cancel to prevent battery drain.",
+    backgroundTitle: "Tracking You.",
+    requestPermissions: true,
+    stale: false,
+    distanceFilter: 0 // 50m of distance between updates
   };
 
   constructor(private busService: BusService, private loginService: LoginService) {
-    this.firebaseDB = getDatabase();  
+    this.firebaseDB = getDatabase();
   }
 
   ngOnInit() {
     //this.getBusCoords();
     //TODO: Token must be passed in Input from login component or taken by the memory of the device
-    LocalNotifications.requestPermissions().then((permission) => {
-      permission.display;
-    }
-    );
     this.getToken();
   }
 
@@ -93,24 +92,31 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   }
 
 
-  getBus(code: string, token: string) {
-    this.busService.getBusByCode(code, token).subscribe(
-      (data: any) => {
-        this.bus = data;
-        console.log('Bus loaded', this.bus);
-        //this.startTracking();
-      },
-      error => {
-        console.error('Error getting bus', error);
-      }
-    );
+  async getBus(code: string, token: string) {
+    try {
+      const data = await this.busService.getBusByCode(code, token);
+      this.bus = data;
+      console.log('Bus loaded', this.bus);
+      //this.startTracking();
+    } catch (error) {
+      console.error('Error getting bus', error);
+    }
   }
+
 
   ngOnDestroy() {
     // Stop tracking when the component is destroyed
     this.stopTracking();
   }
 
+  checkPermission() {
+    //Permesso di notifica
+    LocalNotifications.requestPermissions().then((permission) => {
+    }
+    );
+  }
+
+  /*
   async checkGeolocationPermission() {
     const permissionStatus = await Geolocation.checkPermissions();
     if (permissionStatus.location !== 'granted') {
@@ -120,7 +126,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
       }
     }
   }
+  */
 
+  /*
   async getBusCoords() {
     try {
       this.checkGeolocationPermission();
@@ -130,92 +138,70 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
       console.error('Error getting current position', error);
     }
   }
+  */
 
   async startTracking() {
     try {
-      this.checkGeolocationPermission();
+      //this.checkGeolocationPermission();
 
-      const options = {
-        backgroundMessage: "Cancel to prevent battery drain.",
-        backgroundTitle: "Tracking You.",
-        requestPermissions: true,
-        stale: false,
-        distanceFilter: 0 // 50m of distance between updates
-      };
-
-      this.tracking = true;
-      this.BackgroundGeolocation.addWatcher(options, (location, error) => {
-        if (error) {
-          if (error.code === "NOT_AUTHORIZED") {
-            if (window.confirm(
-              "This app needs your location, " +
-              "but does not have permission.\n\n" +
-              "Open settings now?"
-            )) {
-              this.BackgroundGeolocation.openSettings();
+      LocalNotifications.requestPermissions().then((permission) => {
+        this.tracking = true;
+        this.BackgroundGeolocation.addWatcher(this.options, async (location, error) => {
+          console.log('WATCHER', this.watcherId); // Stampa l'ID del watcher
+          if (error) {
+            if (error.code === "NOT_AUTHORIZED") {
+              if (window.confirm(
+                "This app needs your location, " +
+                "but does not have permission.\n\n" +
+                "Open settings now?"
+              )) {
+                this.BackgroundGeolocation.openSettings();
+              }
             }
+            console.error(error);
+            return;
           }
-          console.error(error);
-          return;
-        }
-  
-        // Handle the location update
-        console.log(location);
-        this.bus.coords.latitude = location?.latitude || 0;
-          this.bus.coords.longitude = location?.longitude || 0;
-          // Aggiorna il Realtime Database di Firebase con la nuova posizione
-          if (this.bus.coords.latitude !== 0 && this.bus.coords.longitude !== 0) {
-            console.log('Position in updating', this.bus.coords);
-            this.updateRealTimeCoords(this.bus.coords);
-            console.log('Position updated');
 
-            if (this.checkStopReached(this.bus.coords)) {
-              this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction).subscribe(
-                (data: boolean) => {
+          if (this.tracking) {
+            // Handle the location update
+            console.log(location);
+            this.bus.coords.latitude = location?.latitude || 0;
+            this.bus.coords.longitude = location?.longitude || 0;
+            // Aggiorna il Realtime Database di Firebase con la nuova posizione
+            if (this.bus.coords.latitude !== 0 && this.bus.coords.longitude !== 0) {
+              this.updateRealTimeCoords(this.bus.coords);
+
+              if (this.checkStopReached(this.bus.coords)) {
+                try {
+                  const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction);
                   console.log('Stop reached updated', data);
-                },
-                error => {
+                } catch (error) {
                   console.error('Error updating stop reached', error);
                 }
-              );
+              }
             }
           }
-        
-        // Update your bus coordinates or perform any other necessary actions
-      });
-      // Avvia il tracciamento della posizione e memorizza l'ID del watcher
-      /*
-      this.tracking = true;
-      this.watchId = await Geolocation.watchPosition(options, (position, err) => {
-        if (err) {
-          console.error('Error watching position', err);
-        } else {
-          this.bus.coords.latitude = position?.coords.latitude || 0;
-          this.bus.coords.longitude = position?.coords.longitude || 0;
-          // Aggiorna il Realtime Database di Firebase con la nuova posizione
-          if (this.bus.coords.latitude !== 0 && this.bus.coords.longitude !== 0) {
-            console.log('Position in updating', this.bus.coords);
-            this.updateRealTimeCoords(this.bus.coords);
-            console.log('Position updated');
+          else{
+              console.log('STOP TRACKING');
+              console.log('watcherId= ', this.watcherId);
+              this.BackgroundGeolocation.removeWatcher({ id: this.watcherId }).then(() => {
+                console.log('Watcher removed')
+                });
+            
+          }
 
-            if (this.checkStopReached(this.bus.coords)) {
-              this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction).subscribe(
-                (data: boolean) => {
-                  console.log('Stop reached updated', data);
-                },
-                error => {
-                  console.error('Error updating stop reached', error);
-                }
-              );
-            }
-          }
-        }
+          // Update your bus coordinates or perform any other necessary actions
+        }).then((watcherId) => {
+          this.watcherId = watcherId; // Memorizza l'ID del watcher
+        });
       });
-      */
     } catch (error) {
       console.error('Error starting position tracking', error);
     }
   }
+
+
+
 
   updateRealTimeCoords(coords: any) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
@@ -322,8 +308,6 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   stopTracking() {
     // Interrompi il tracciamento della posizione se è attivo
     this.tracking = false;
-    if (this.watchId) {
-      Geolocation.clearWatch({ id: this.watchId });
-    }
   }
+
 }
