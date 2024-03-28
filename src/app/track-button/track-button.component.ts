@@ -67,7 +67,6 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    //this.getBusCoords();
     //TODO: Token must be passed in Input from login component or taken by the memory of the device
     this.getToken();
   }
@@ -109,45 +108,11 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     this.stopTracking();
   }
 
-  checkPermission() {
-    //Permesso di notifica
-    LocalNotifications.requestPermissions().then((permission) => {
-    }
-    );
-  }
-
-  /*
-  async checkGeolocationPermission() {
-    const permissionStatus = await Geolocation.checkPermissions();
-    if (permissionStatus.location !== 'granted') {
-      const requestStatus = await Geolocation.requestPermissions();
-      if (requestStatus.location !== 'granted') {
-        throw new Error('Permission not granted');
-      }
-    }
-  }
-  */
-
-  /*
-  async getBusCoords() {
-    try {
-      this.checkGeolocationPermission();
-
-      this.bus.coords = (await Geolocation.getCurrentPosition(this.options)).coords;
-    } catch (error) {
-      console.error('Error getting current position', error);
-    }
-  }
-  */
-
   async startTracking() {
     try {
-      //this.checkGeolocationPermission();
-
       LocalNotifications.requestPermissions().then((permission) => {
         this.tracking = true;
         this.BackgroundGeolocation.addWatcher(this.options, async (location, error) => {
-          console.log('WATCHER', this.watcherId); // Stampa l'ID del watcher
           if (error) {
             if (error.code === "NOT_AUTHORIZED") {
               if (window.confirm(
@@ -172,24 +137,23 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
               if (this.checkStopReached(this.bus.coords)) {
                 try {
-                  const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction);
-                  console.log('Stop reached updated', data);
+                  const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.lastDirection);
+                  if(this.bus.direction != this.lastDirection) {
+                    this.busService.fixHistoryGaps(this.bus.route.id, this.lastDirection);
+                  }
+                  console.log('Stop reached: ', data);
                 } catch (error) {
                   console.error('Error updating stop reached', error);
                 }
               }
             }
           }
-          else{
-              console.log('STOP TRACKING');
-              console.log('watcherId= ', this.watcherId);
-              this.BackgroundGeolocation.removeWatcher({ id: this.watcherId }).then(() => {
-                console.log('Watcher removed')
-                });
-            
+          else {
+            console.log('STOP TRACKING');
+            this.BackgroundGeolocation.removeWatcher({ id: this.watcherId }).then(() => {
+              console.log('Watcher removed')
+            });
           }
-
-          // Update your bus coordinates or perform any other necessary actions
         }).then((watcherId) => {
           this.watcherId = watcherId; // Memorizza l'ID del watcher
         });
@@ -198,9 +162,6 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
       console.error('Error starting position tracking', error);
     }
   }
-
-
-
 
   updateRealTimeCoords(coords: any) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
@@ -219,7 +180,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
     console.log("VEDIAMO SE RICORDA", this.bus.direction);
     if (this.bus.direction !== undefined && this.bus.direction !== '') {
-      console.log("direction set", this.bus.direction);
+      console.log("direction: ", this.bus.direction);
       const stops = this.getStopsByDirection();
       let i = 0;
       for (const stop of stops) {
@@ -232,17 +193,14 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
           this.updateDirectionAndStop();
           break;
         }
-        else{
-          console.log("distance from stop ", i, " is ", distance, "m");
-        }
         i++;
       }
     } else {
-      console.log("direction not set");
+      console.log("direction NOT set");
       const stopsForward = this.bus.route.stops.forwardStops;
       const stopsBack = this.bus.route.stops.backStops;
 
-      stopReached = this.checkStopsInDirection(stopsForward, busCoords) || this.checkStopsInDirection(stopsBack, busCoords);
+      stopReached = this.checkStopsInDirection(stopsForward, 'forward',  busCoords) || this.checkStopsInDirection(stopsBack, 'back', busCoords);
     }
 
     return stopReached;
@@ -258,21 +216,21 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     return Object.values(stops);
   }
 
-  checkStopsInDirection(stops: any, busCoords: any): boolean {
+  checkStopsInDirection(stops: any, direction: string, busCoords: any): boolean {
     let stopReached = false;
     let i = 0;
     for (const stop of stops) {
       const distance = this.calculateDistance(busCoords.latitude, busCoords.longitude, stop.coords.latitude, stop.coords.longitude);
       if (distance < 0.05) { // 50m of distance
-        console.log('Stop reached', stop);
+        console.log('Stop reached without direction: ', stop);
         stopReached = true;
         this.bus.lastStop = i;
-        console.log("PRE SET DIRECTION:", this.bus.direction, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        this.bus.direction = (this.bus.direction === 'forward') ? 'back' : 'forward';
-        console.log("POST DIRECTION:", this.bus.direction, "???????????????????????????")
+        this.bus.direction = direction;
+        console.log("New direction: ", this.bus.direction);
         this.lastDirection = this.bus.direction;
         if (this.bus.lastStop === stops.length - 1) {
-          this.bus.direction = (this.bus.direction === 'forward') ? 'back' : 'forward';
+          this.bus.direction = (direction === 'forward') ? 'back' : 'forward';
+          this.bus.lastStop = 0;
         }
         break;
       }
@@ -284,10 +242,10 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   updateDirectionAndStop() {
     if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1) {
       this.bus.direction = 'back';
-      this.bus.lastStop = 0;
+      //this.bus.lastStop = 0;
     } else if (this.bus.direction === 'back' && this.bus.lastStop === Object.keys(this.bus.route.stops.backStops).length - 1) {
       this.bus.direction = 'forward';
-      this.bus.lastStop = 0;
+      //this.bus.lastStop = 0;
     }
   }
 

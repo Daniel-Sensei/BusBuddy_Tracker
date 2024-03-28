@@ -43,4 +43,12 @@ export class BusService {
     });
     return response.data;
   }
+
+  public async fixHistoryGaps(routeId: string, direction: string): Promise<boolean> {
+    const response = await CapacitorHttp['post']({
+      url: this.BACKEND_API + "fixHistoryGaps",
+      params: { routeId: routeId, direction: direction }
+    });
+    return response.data;
+  }
 }
