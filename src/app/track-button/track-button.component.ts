@@ -164,7 +164,6 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
           if (this.tracking) {
             // Handle the location update
-            console.log(location);
             this.bus.coords.latitude = location?.latitude || 0;
             this.bus.coords.longitude = location?.longitude || 0;
             // Aggiorna il Realtime Database di Firebase con la nuova posizione
@@ -205,9 +204,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   updateRealTimeCoords(coords: any) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
-    console.log('Updating position before ref', coords);
     const dbRef = ref(this.firebaseDB, 'buses/' + this.bus.id + '/coords');
-    console.log("dbRef", dbRef);
     set(dbRef, {
       latitude: coords.latitude,
       longitude: coords.longitude
@@ -220,8 +217,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     // Controlla se il bus è vicino a una fermata
     let stopReached = false;
 
-    if (this.bus.direction !== "") {
-      console.log('Direction: ', this.bus.direction);
+    console.log("VEDIAMO SE RICORDA", this.bus.direction);
+    if (this.bus.direction !== undefined && this.bus.direction !== '') {
+      console.log("direction set", this.bus.direction);
       const stops = this.getStopsByDirection();
       let i = 0;
       for (const stop of stops) {
@@ -234,10 +232,13 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
           this.updateDirectionAndStop();
           break;
         }
+        else{
+          console.log("distance from stop ", i, " is ", distance, "m");
+        }
         i++;
       }
     } else {
-      console.log('Direction not set');
+      console.log("direction not set");
       const stopsForward = this.bus.route.stops.forwardStops;
       const stopsBack = this.bus.route.stops.backStops;
 
@@ -266,10 +267,12 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
         console.log('Stop reached', stop);
         stopReached = true;
         this.bus.lastStop = i;
+        console.log("PRE SET DIRECTION:", this.bus.direction, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         this.bus.direction = (this.bus.direction === 'forward') ? 'back' : 'forward';
+        console.log("POST DIRECTION:", this.bus.direction, "???????????????????????????")
         this.lastDirection = this.bus.direction;
         if (this.bus.lastStop === stops.length - 1) {
-          this.bus.lastStop = 0;
+          this.bus.direction = (this.bus.direction === 'forward') ? 'back' : 'forward';
         }
         break;
       }

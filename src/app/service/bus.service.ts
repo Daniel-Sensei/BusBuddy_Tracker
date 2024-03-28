@@ -39,7 +39,7 @@ export class BusService {
   public async updateStopReached(routeId: string, stopIndex: string, direction: string): Promise<boolean> {
     const response = await CapacitorHttp['post']({
       url: this.BACKEND_API + "stopReached",
-      data: { routeId: routeId, stopIndex: stopIndex, direction: direction }
+      params: { routeId: routeId, stopIndex: stopIndex, direction: direction }
     });
     return response.data;
   }
