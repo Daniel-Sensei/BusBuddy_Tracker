@@ -7,7 +7,6 @@ import { LoginService } from '../service/login.service';
 import { registerPlugin } from "@capacitor/core";
 import { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { signOut } from 'firebase/auth';
 
 
 @Component({
@@ -25,7 +24,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   bus: Bus = {
     id: '', //TODO: Replace with your bus ID by authenticating with Firebase
-    code: 'CH349ZY', //CH349ZY
+    code: 'AAA', //CH349ZY
     coords: {
       latitude: 0,
       longitude: 0
@@ -70,9 +69,13 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     //TODO: Token must be passed in Input from login component or taken by the memory of the device
-    this.getToken();
+    this.loginService.getToken().then(token => {
+      console.log('Token Ricevuto:', token);
+      this.getBus(this.bus.code, token);
+    });
   }
 
+  /*
   async getToken() {
     this.loginService.login("consorzio.autolinee@cosenza.it", "consorzio")
       .then(token => {
@@ -91,6 +94,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
         // Gestisci gli errori di autenticazione
       });
   }
+  */
 
 
   async getBus(code: string, token: string) {

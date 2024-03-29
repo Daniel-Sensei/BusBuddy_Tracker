@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { getAuth, Auth, signInWithEmailAndPassword } from 'firebase/auth';
+import { Preferences } from '@capacitor/preferences';
 
 @Injectable({
   providedIn: 'root'
@@ -14,10 +15,47 @@ export class LoginService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       // Accesso riuscito, restituisci l'ID token dell'utente
       const user = userCredential.user;
-      return user.getIdToken();
+      const idToken = await user.getIdToken();
+      
+      // Salvataggio del token in Preferences
+      await Preferences.set({
+        key: 'authToken',
+        value: idToken
+      });
+
+      return idToken;
     } catch (error) {
       console.error('Errore durante il login:', error);
       return null;
+    }
+  }
+
+  public async getToken(): Promise<string> {
+    try {
+      const result = await Preferences.get({ key: 'authToken' });
+      return result.value || ''; // Restituisce il token se presente, altrimenti una stringa vuota
+    } catch (error) {
+      console.error('Errore durante il recupero del token:', error);
+      return '';
+    }
+  }
+
+  //implemneta isLoggedin
+  public async isLoggedIn(): Promise<boolean> {
+    try {
+      const token = await this.getToken();
+      return token !== '';
+    } catch (error) {
+      console.error('Errore durante il controllo dello stato di accesso:', error);
+      return false;
+    }
+  }
+
+  public async logout(): Promise<void> {
+    try {
+      await Preferences.remove({ key: 'authToken' });
+    } catch (error) {
+      console.error('Errore durante il logout:', error);
     }
   }
 }
