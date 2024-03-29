@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../service/login.service';
+import { NavigationExtras } from '@angular/router';
+import { BusService } from '../service/bus.service';
+
 
 @Component({
   selector: 'app-login',
@@ -17,10 +20,16 @@ export class LoginPage {
     try {
       this.loginService.login(this.email, this.password).then((token) => {
         if (token) {
-          // Accesso riuscito, reindirizza l'utente alla pagina principale
-          this.router.navigate(['']);
-        } else {
-          // Accesso fallito, mostra un messaggio di errore all'utente
+          // Costruisci l'oggetto NavigationExtras per passare il token come parametro query
+          const navigationExtras: NavigationExtras = {
+            queryParams: {
+              token: token,
+              email: this.email
+            }
+          };
+        
+          // Reindirizza l'utente alla pagina bus-selection con il token come parametro query
+          this.router.navigate(['/bus-selection'], navigationExtras);
         }
       });
     } catch (error) {

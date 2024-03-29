@@ -21,10 +21,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   watcherId: any;
   BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
 
-
   bus: Bus = {
     id: '', //TODO: Replace with your bus ID by authenticating with Firebase
-    code: 'AAA', //CH349ZY
+    code: '', //CH349ZY
     coords: {
       latitude: 0,
       longitude: 0
@@ -68,10 +67,15 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    console.log('TrackButtonComponent INIT!!!!!!!!!!!!!!!');
     //TODO: Token must be passed in Input from login component or taken by the memory of the device
     this.loginService.getToken().then(token => {
       console.log('Token Ricevuto:', token);
-      this.getBus(this.bus.code, token);
+      this.loginService.getBusCode().then(busCode => {
+        console.log('Codice pullman ricevuto:', busCode);
+        this.bus.code = busCode;
+        this.getBus(busCode, token);
+      });
     });
   }
 

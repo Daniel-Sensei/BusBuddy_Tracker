@@ -51,4 +51,28 @@ export class BusService {
     });
     return response.data;
   }
+
+  public async getRoutesByBusCode(busCode: string): Promise<any> {
+    const response = await CapacitorHttp['get']({
+      url: this.BACKEND_API + "routesByBusCode",
+      params: { busCode: busCode }
+    });
+    return response.data;
+  }
+
+  public async updateBusRoute(busCode: string, routeId: string): Promise<Boolean> {
+    const response = await CapacitorHttp['post']({
+      url: this.BACKEND_API + "updateBusRoute",
+      params: { busCode: busCode, routeId: routeId }
+    });
+    return response.data;
+  }
+
+  public async getCompanyByEmail(email: string): Promise<any> {
+    const response = await CapacitorHttp['get']({
+      url: this.BACKEND_API + "companyByEmail",
+      params: { email: email }
+    });
+    return response.data;
+  }
 }

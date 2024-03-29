@@ -30,6 +30,27 @@ export class LoginService {
     }
   }
 
+  public async setBusCode(busCode: string): Promise<void> {
+    try {
+      await Preferences.set({
+        key: 'busCode',
+        value: busCode
+      });
+    } catch (error) {
+      console.error('Errore durante il salvataggio del codice del pullman:', error);
+    }
+  }
+
+  public async getBusCode(): Promise<string> {
+    try {
+      const result = await Preferences.get({ key: 'busCode' });
+      return result.value || ''; // Restituisce il codice del pullman se presente, altrimenti una stringa vuota
+    } catch (error) {
+      console.error('Errore durante il recupero del codice del pullman:', error);
+      return '';
+    }
+  }
+
   public async getToken(): Promise<string> {
     try {
       const result = await Preferences.get({ key: 'authToken' });

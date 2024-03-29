@@ -1,0 +1,29 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>bus-selection</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">bus-selection</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-item>
+    <ion-label position="floating">Codice Pullman</ion-label>
+    <ion-input type="text" [(ngModel)]="busCode" (ionChange)="onBusCodeChange()"></ion-input>
+  </ion-item>
+  
+
+  <ion-item>
+    <ion-label>Linea</ion-label>
+    <ion-select [(ngModel)]="selectedLine">
+      <ion-select-option *ngFor="let line of lines" [value]="line">{{ line }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-button expand="block" (click)="onSelectBus()">Seleziona</ion-button>
+
+</ion-content>
