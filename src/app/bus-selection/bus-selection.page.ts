@@ -74,8 +74,8 @@ export class BusSelectionPage implements OnInit {
       console.log('Risultato dell\'aggiornamento del percorso del pullman:', result);
 
       this.loginService.setBusCode(this.busCode).then(() => {
-        // Reindirizza l'utente alla pagina bus-selection con il token come parametro query
-        this.router.navigate(['']);
+        // Reindirizza l'utente alla pagina '' senza passare alcun parametro e ricarica la pagina
+        this.router.navigate([''], { replaceUrl: true });
       });
     });
   }
