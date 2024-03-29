@@ -7,6 +7,7 @@ import { LoginService } from '../service/login.service';
 import { registerPlugin } from "@capacitor/core";
 import { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { signOut } from 'firebase/auth';
 
 
 @Component({
@@ -24,7 +25,7 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
 
   bus: Bus = {
     id: '', //TODO: Replace with your bus ID by authenticating with Firebase
-    code: 'CH349ZY',
+    code: 'CH349ZY', //CH349ZY
     coords: {
       latitude: 0,
       longitude: 0
@@ -50,8 +51,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     lastStop: -1
   };
 
-  lastDirection = '';
   token = '';
+  onlyForward = false;
+  lastStopName = '';
 
   // Used by the Geolocation API to get the current position
   options = {
@@ -96,6 +98,11 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
       const data = await this.busService.getBusByCode(code, token);
       this.bus = data;
       console.log('Bus loaded', this.bus);
+      if (this.bus.route.stops.backStops === undefined || Object.keys(this.bus.route.stops.backStops).length === 0) {
+        this.onlyForward = true;
+      }
+      this.bus.direction = '';
+      console.log('Only forward:', this.onlyForward);
       //this.startTracking();
     } catch (error) {
       console.error('Error getting bus', error);
@@ -133,13 +140,16 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
             this.bus.coords.longitude = location?.longitude || 0;
             // Aggiorna il Realtime Database di Firebase con la nuova posizione
             if (this.bus.coords.latitude !== 0 && this.bus.coords.longitude !== 0) {
-              this.updateRealTimeCoords(this.bus.coords);
+              this.updateRealTimeCoords(this.bus.coords, this.bus.direction, this.bus.lastStop, location?.speed);
 
               if (this.checkStopReached(this.bus.coords)) {
                 try {
-                  const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.lastDirection);
-                  if(this.bus.direction != this.lastDirection) {
-                    this.busService.fixHistoryGaps(this.bus.route.id, this.lastDirection);
+                  const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction);
+                  let oldDirection = this.bus.direction;
+                  let oldStop = this.bus.lastStop;
+                  this.updateDirectionAndStop();
+                  if (this.bus.direction != oldDirection || (this.onlyForward && oldStop === Object.keys(this.bus.route.stops.forwardStops).length - 1)) {
+                    this.busService.fixHistoryGaps(this.bus.route.id, oldDirection);
                   }
                   console.log('Stop reached: ', data);
                 } catch (error) {
@@ -163,12 +173,19 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateRealTimeCoords(coords: any) {
+  updateRealTimeCoords(coords: any, direction: string, lastStop: number, speed: number | null | undefined) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
-    const dbRef = ref(this.firebaseDB, 'buses/' + this.bus.id + '/coords');
+    console.log("params: ", coords, direction, lastStop, speed);
+    const dbRef = ref(this.firebaseDB, 'buses/' + this.bus.id);
     set(dbRef, {
-      latitude: coords.latitude,
-      longitude: coords.longitude
+      coords: {
+        latitude: coords.latitude,
+        longitude: coords.longitude
+      },
+      direction: direction,
+      lastStop: lastStop,
+      speed: speed,
+      routeId: this.bus.route.id
     })
       .then(() => console.log('Position updated successfully'))
       .catch(error => console.error('Error updating position', error));
@@ -182,25 +199,24 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
     if (this.bus.direction !== undefined && this.bus.direction !== '') {
       console.log("direction: ", this.bus.direction);
       const stops = this.getStopsByDirection();
-      let i = 0;
-      for (const stop of stops) {
+      for (let i = this.bus.lastStop + 1; i < stops.length; i++) { //escludo se stesso
+        const stop = stops[i];
         const distance = this.calculateDistance(busCoords.latitude, busCoords.longitude, stop.coords.latitude, stop.coords.longitude);
-        if (distance < 0.05 && (this.bus.lastStop != i || this.bus.direction != this.lastDirection)) { // 50m of distance
-          console.log('Stop reached', stop);
-          stopReached = true;
-          this.lastDirection = this.bus.direction;
-          this.bus.lastStop = i;
-          this.updateDirectionAndStop();
-          break;
+        if (distance < 0.05 && this.lastStopName != stop.name) { // 50m of distance
+            console.log('Stop reached', stop);
+            stopReached = true;
+            this.bus.lastStop = i;
+            this.lastStopName = stop.name;
+            //this.updateDirectionAndStop();
+            break;
         }
-        i++;
       }
     } else {
       console.log("direction NOT set");
       const stopsForward = this.bus.route.stops.forwardStops;
       const stopsBack = this.bus.route.stops.backStops;
 
-      stopReached = this.checkStopsInDirection(stopsForward, 'forward',  busCoords) || this.checkStopsInDirection(stopsBack, 'back', busCoords);
+      stopReached = this.checkStopsInDirection(stopsForward, 'forward', busCoords) || this.checkStopsInDirection(stopsBack, 'back', busCoords);
     }
 
     return stopReached;
@@ -226,12 +242,9 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
         stopReached = true;
         this.bus.lastStop = i;
         this.bus.direction = direction;
+        this.lastStopName = stop.name;
         console.log("New direction: ", this.bus.direction);
-        this.lastDirection = this.bus.direction;
-        if (this.bus.lastStop === stops.length - 1) {
-          this.bus.direction = (direction === 'forward') ? 'back' : 'forward';
-          this.bus.lastStop = 0;
-        }
+        console.log("Last stop: ", this.bus.lastStop);
         break;
       }
       i++;
@@ -240,12 +253,22 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   }
 
   updateDirectionAndStop() {
-    if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1) {
+    if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1 && !this.onlyForward) {
       this.bus.direction = 'back';
-      //this.bus.lastStop = 0;
+      this.lastStopName = '';
+      this.bus.lastStop = -1;
     } else if (this.bus.direction === 'back' && this.bus.lastStop === Object.keys(this.bus.route.stops.backStops).length - 1) {
       this.bus.direction = 'forward';
-      //this.bus.lastStop = 0;
+      this.lastStopName = '';
+      this.bus.lastStop = -1;
+    } else if (this.bus.direction === 'forward' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1 && this.onlyForward) {
+      this.stopTracking();
+    } else if (this.bus.direction === '' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1 && this.onlyForward) {
+      this.stopTracking();
+    } else if (this.bus.direction === '' && this.bus.lastStop === Object.keys(this.bus.route.stops.forwardStops).length - 1 && !this.onlyForward) {
+      this.bus.direction = 'back';
+      this.lastStopName = '';
+      this.bus.lastStop = -1;
     }
   }
 
@@ -269,6 +292,8 @@ export class TrackButtonComponent implements OnInit, OnDestroy {
   stopTracking() {
     // Interrompi il tracciamento della posizione se è attivo
     this.tracking = false;
+    this.bus.direction = '';
+    this.bus.lastStop = -1;
   }
 
 }
