@@ -20,8 +20,14 @@ export class BusSelectionPage implements OnInit {
   busCode: string = ''; // Variabile per memorizzare il codice del pullman
   selectedLine?: string; // Variabile per memorizzare la linea selezionata
 
-  lines: string[] = []; // Esempio di array di linee disponibili
+  lines: any[] = []; // Esempio di array di linee disponibili
   routes: any[] = []; // Esempio di array di rotte disponibili
+
+  busCodeValid: boolean = false; // Variabile per memorizzare lo stato di errore del codice del pullman
+  lineSelected: boolean = false; // Variabile per memorizzare lo stato di errore della linea selezionata
+
+  credentialsWrong: boolean = false; // Variabile per memorizzare lo stato di errore delle credenziali
+  credentialsRight: boolean = false; // Variabile per memorizzare lo stato di correttezza delle credenziali
 
   constructor(private busService: BusService, private route: ActivatedRoute, private router: Router, private loginService: LoginService) { }
 
@@ -42,17 +48,34 @@ export class BusSelectionPage implements OnInit {
   onBusCodeChange() {
     console.log('Codice pullman cambiato:', this.busCode);
     this.busService.getRoutesByBusCode(this.busCode).then((routes) => {
-      if (routes[0].company == this.company) {
-        this.routes = routes;
-        console.log('Rotte per il pullman', routes);
-        // Qui puoi aggiornare l'elenco delle linee disponibili in base alle rotte ottenute
-        for (let route of routes) {
-          this.lines.push(route.code);
+      if (routes.length > 0) {
+        console.log('Rotte trovate per il pullman', routes);
+        this.credentialsWrong = false;
+        this.credentialsRight = true;
+        if (routes[0].company == this.company) {
+          this.routes = routes;
+          console.log('Rotte per il pullman', routes);
+          // Qui puoi aggiornare l'elenco delle linee disponibili in base alle rotte ottenute
+          for (let route of routes) {
+            route.code = route.code.split('_');
+            route.code = route.code.join(' ');
+            this.lines.push(route);
+          }
+        } else {
+          console.log('Il pullman non appartiene alla compagnia');
         }
       } else {
-        console.log('Il pullman non appartiene alla compagnia');
+        console.log('Nessuna rotta trovata per il pullman');
+        this.credentialsWrong = true;
+        this.credentialsRight = false;
+        this.lines = [];
       }
     });
+  }
+
+  handleChangeLine(event: any) {
+    this.selectedLine = event.target.value.id;
+    console.log('Linea selezionata:', this.selectedLine);
   }
 
   onSelectBus() {
@@ -64,7 +87,8 @@ export class BusSelectionPage implements OnInit {
     //salva routeId in base alla linea selezionata
     let routeId = '';
     for (let route of this.routes) {
-      if (route.code == this.selectedLine) {
+      console.log('route:', route.code, this.selectedLine)
+      if (route.id === this.selectedLine) {
         routeId = route.id;
         break;
       }
@@ -78,5 +102,10 @@ export class BusSelectionPage implements OnInit {
         this.router.navigate([''], { replaceUrl: true });
       });
     });
+  }
+
+  validateBusCode() {
+    this.busCodeValid = Boolean(this.busCode && this.busCode.trim() !== '');
+    this.credentialsWrong = false;
   }
 }

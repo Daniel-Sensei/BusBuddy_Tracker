@@ -1,29 +1,38 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>bus-selection</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">bus-selection</ion-title>
+      <ion-title size="large">Bus Selection</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-item>
-    <ion-label position="floating">Codice Pullman</ion-label>
-    <ion-input type="text" [(ngModel)]="busCode" (ionChange)="onBusCodeChange()"></ion-input>
-  </ion-item>
+  <div class="container">
+    <ion-img src="../../assets/bus.png" style="margin-bottom: 10px;"></ion-img>
+
+
+    <div class="title">Seleziona bus</div>
+    <div class="subtitle">Inserisci il codice univoco del veicolo e seleziona la linea di appartenenza per iniziare il monitoraggio.
+    </div>
+
+
+    <ion-item class="input" [class.invalid-input]="!busCodeValid" [class.right-input]="credentialsRight" [class.wrong-input]="credentialsWrong">
+      <ion-label position="floating">Codice Veicolo</ion-label>
+      <ion-input type="email" [(ngModel)]="busCode" (ngModelChange)="validateBusCode()" (ionChange)="onBusCodeChange()"></ion-input>
+    </ion-item>
+
+    <div *ngIf="credentialsRight && lines.length === 0" class="loading-overlay">
+      <!-- Aggiungi qui l'effetto di caricamento, ad esempio uno spinner -->
+      <ion-spinner></ion-spinner>
+    </div>
+
+      <ion-select (ionChange)="handleChangeLine($event)" label="Linee" label-placement="floating" fill="outline" class="selector" [disabled]="lines.length === 0">
+        <ion-select-option *ngFor="let line of lines" [value]="line">{{ line.code }}</ion-select-option>
+      </ion-select>
+
   
 
-  <ion-item>
-    <ion-label>Linea</ion-label>
-    <ion-select [(ngModel)]="selectedLine">
-      <ion-select-option *ngFor="let line of lines" [value]="line">{{ line }}</ion-select-option>
-    </ion-select>
-  </ion-item>
+    <ion-button class="login-button" (click)="onSelectBus()" [disabled]="!busCodeValid || selectedLine === undefined || credentialsWrong">Seleziona Linea</ion-button>
+    <div class="subtitle" style="color: var(--ion-color-danger);" *ngIf="credentialsWrong">Codice del veicolo non valido. Si prega di modificare i dati e riprovare.</div>
 
-  <ion-button expand="block" (click)="onSelectBus()">Seleziona</ion-button>
-
+  </div>
+  
 </ion-content>
