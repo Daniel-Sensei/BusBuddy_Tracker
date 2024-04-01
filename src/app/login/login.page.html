@@ -1,9 +1,3 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Login</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
@@ -11,24 +5,30 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-card>
-    <ion-card-header>
-      Accedi
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item>
-        <ion-label position="floating">Email</ion-label>
-        <ion-input type="email" [(ngModel)]="email"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label position="floating">Password</ion-label>
-        <ion-input type="password" [(ngModel)]="password"></ion-input>
-      </ion-item>
-    </ion-card-content>
-    <ion-row>
-      <ion-col>
-        <ion-button expand="block" (click)="login()">Login</ion-button>
-      </ion-col>
-    </ion-row>
-  </ion-card>
+  <div class="container">
+    <ion-img src="../../assets/login.jpg" style="margin-bottom: 10px;"></ion-img>
+
+
+    <div class="title">Bentornato</div>
+    <div class="subtitle">Inserisci le credenziali della compagnia di trasporti per utilizzare subito il nostro tracker
+    </div>
+
+
+    <ion-item class="input" [class.invalid-input]="!emailValid" [class.wrong-input]="credentialsWrong">
+      <ion-label position="floating">Email</ion-label>
+      <ion-input type="email" [(ngModel)]="email" (ngModelChange)="validateEmail()"></ion-input>
+    </ion-item>
+
+    <ion-item class="input" [class.invalid-input]="!passwordValid" [class.wrong-input]="credentialsWrong">
+      <ion-label position="floating">Password</ion-label>
+      <ion-input type="password" [(ngModel)]="password" (ngModelChange)="validatePassword()"></ion-input>
+    </ion-item>
+
+
+    
+    <ion-button class="login-button" (click)="login()" [disabled]="!emailValid || !passwordValid || credentialsWrong">Accedi</ion-button>
+    <div class="subtitle" style="color: var(--ion-color-danger);" *ngIf="credentialsWrong">Email o password non valide. Si prega di modificare i dati e riprovare.</div>
+
+  </div>
+
 </ion-content>

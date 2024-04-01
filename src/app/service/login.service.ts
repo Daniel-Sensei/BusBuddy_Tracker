@@ -26,7 +26,8 @@ export class LoginService {
       return idToken;
     } catch (error) {
       console.error('Errore durante il login:', error);
-      return null;
+      console.log("PASSO ERRORE");
+      throw error; // Rethrow the error to be handled by the calling function
     }
   }
 
