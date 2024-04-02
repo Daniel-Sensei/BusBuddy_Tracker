@@ -8,6 +8,10 @@ import { registerPlugin } from "@capacitor/core";
 import { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Router } from '@angular/router';
+import { ViewChild } from '@angular/core';
+import { IonModal } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
+
 
 @Component({
   selector: 'app-tab1',
@@ -20,7 +24,16 @@ export class Tab1Page implements OnInit, OnDestroy {
   firebaseDB: any;
   watcherId: any;
   BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
+  stops: any;
+  loading = true;
 
+  // Dichiarazione della variabile all'interno del componente
+timerValue: string = '00:00';
+private intervalId: any;
+
+
+
+  @ViewChild('modal', { static: true }) modal!: IonModal; // Ottieni il riferimento al modal
   bus: Bus = {
     id: '', //TODO: Replace with your bus ID by authenticating with Firebase
     code: '', //CH349ZY
@@ -49,7 +62,6 @@ export class Tab1Page implements OnInit, OnDestroy {
     lastStop: -1
   };
 
-  token = '';
   onlyForward = false;
   lastStopName = '';
 
@@ -62,7 +74,7 @@ export class Tab1Page implements OnInit, OnDestroy {
     distanceFilter: 0 // 50m of distance between updates
   };
 
-  constructor(private busService: BusService, private loginService: LoginService, private router: Router) {
+  constructor(private busService: BusService, private loginService: LoginService, private router: Router, private alertController: AlertController) {
     this.firebaseDB = getDatabase();
   }
 
@@ -75,6 +87,7 @@ export class Tab1Page implements OnInit, OnDestroy {
         console.log('Codice pullman ricevuto:', busCode);
         this.bus.code = busCode;
         this.getBus(busCode, token);
+
       });
     });
   }
@@ -105,6 +118,7 @@ export class Tab1Page implements OnInit, OnDestroy {
     try {
       const data = await this.busService.getBusByCode(code, token);
       this.bus = data;
+      this.loading = false;
       console.log('Bus loaded', this.bus);
       if (this.bus.route.stops.backStops === undefined || Object.keys(this.bus.route.stops.backStops).length === 0) {
         this.onlyForward = true;
@@ -112,8 +126,21 @@ export class Tab1Page implements OnInit, OnDestroy {
       this.bus.direction = '';
       console.log('Only forward:', this.onlyForward);
       //this.startTracking();
+
+      this.updateStopsAndDestination();
     } catch (error) {
       console.error('Error getting bus', error);
+    }
+  }
+
+  updateStopsAndDestination() {
+    if (this.bus.direction === "back") {
+      this.stops = Object.values(this.bus.route.stops.backStops);
+      this.getDestination(true);
+    }
+    else {
+      this.stops = Object.values(this.bus.route.stops.forwardStops);
+      this.destination = this.getDestination();
     }
   }
 
@@ -123,8 +150,26 @@ export class Tab1Page implements OnInit, OnDestroy {
     this.stopTracking();
   }
 
+  startTimer() {
+    let elapsedTimeInSeconds = 0;
+
+    // Avvia l'intervallo e memorizza l'ID restituito da setInterval()
+    this.intervalId = setInterval(() => {
+        elapsedTimeInSeconds++;
+        // Converti il tempo trascorso in formato "mm:ss"
+        const minutes = Math.floor(elapsedTimeInSeconds / 60);
+        const seconds = elapsedTimeInSeconds % 60;
+        const formattedTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        // Aggiorna il valore del timer nell'interfaccia
+        this.timerValue = formattedTime;
+    }, 1000);
+}
+
   async startTracking() {
     try {
+      // Inizializza il tempo trascorso a zero
+      this.startTimer();
+
       LocalNotifications.requestPermissions().then((permission) => {
         this.tracking = true;
         this.BackgroundGeolocation.addWatcher(this.options, async (location, error) => {
@@ -158,6 +203,7 @@ export class Tab1Page implements OnInit, OnDestroy {
                   this.updateDirectionAndStop();
                   if (this.bus.direction != oldDirection || (this.onlyForward && oldStop === Object.keys(this.bus.route.stops.forwardStops).length - 1)) {
                     this.busService.fixHistoryGaps(this.bus.route.id, oldDirection);
+                    this.updateStopsAndDestination();
                   }
                   console.log('Stop reached: ', data);
                 } catch (error) {
@@ -297,18 +343,110 @@ export class Tab1Page implements OnInit, OnDestroy {
     return deg * (Math.PI / 180);
   }
 
+  async requestStopTracking(){
+    const alert = await this.alertController.create({
+      header: 'Conferma',
+      message: 'Sei sicuro di voler interrompere il tracciamento?',
+      buttons: [
+        {
+          text: 'Annulla',
+          role: 'cancel',
+          handler: () => {
+            // L'utente ha annullato, non fare nulla
+          }
+        },
+        {
+          text: 'Conferma',
+          handler: () => {
+            // L'utente ha confermato, interrompi il tracciamento
+            this.stopTracking();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
   stopTracking() {
     // Interrompi il tracciamento della posizione se è attivo
     this.tracking = false;
     this.bus.direction = '';
     this.bus.lastStop = -1;
+    this.lastStopName = '';
+    clearInterval(this.intervalId);
+
   }
 
-  logout() {
-    this.loginService.logout().then(() => {
-      // Reindirizza l'utente alla pagina di login senza passare alcun parametro e ricarica la pagina
-      this.router.navigate(['login'], { replaceUrl: true });
-    });
+  // Aggiorna il metodo logout per visualizzare un popup di conferma prima del logout
+async logout() {
+  const alert = await this.alertController.create({
+    header: 'Conferma',
+    message: 'Sei sicuro di voler effettuare il logout?',
+    buttons: [
+      {
+        text: 'Annulla',
+        role: 'cancel',
+        handler: () => {
+          // L'utente ha annullato, non fare nulla
+        }
+      },
+      {
+        text: 'Conferma',
+        handler: () => {
+          // L'utente ha confermato, esegui il logout
+          this.performLogout();
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
+// Metodo per eseguire il logout effettivo
+private performLogout() {
+  this.loginService.logout().then(() => {
+    // Reindirizza l'utente alla pagina di login senza passare alcun parametro e ricarica la pagina
+    this.router.navigate(['login'], { replaceUrl: true });
+  });
+}
+
+  accordionOpen: boolean = false;
+
+  resizeModal() {
+    this.accordionOpen = !this.accordionOpen;
+    const breakpoint = this.accordionOpen ? 1 : 0.30;
+    this.modal.setCurrentBreakpoint(breakpoint);
+  }
+
+  destination: string = "";
+  getDestination(back = false): string {
+    let destination = "";
+    let code = this.bus.route.code.split("_")[1];
+    // in questo momento code continete qaulcosa del tipo "Nicastro-Fronti-Sambiase"
+    // se !back allora la destinazione dovrà seprarae il trattino e prendere "Nicastro - Fronti - Sambiase"
+    // altrimenti dovra invertire l'rdine e prendere "Sambiase -Fronti - Nicastro"
+    if (!back) {
+      destination = code.split("-").join(" - ");
+    }
+    else {
+      destination = code.split("-").reverse().join(" - ");
+    }
+    return destination;
+  }
+
+  /*
+  ionViewWillEnter() {
+    console.log('ionViewWillEnter');
+    this.ngOnInit();
+  }
+  */
+
+  ionViewWillLeave() {
+    this.modal.dismiss();
+    this.loading = true;
+    this.stopTracking();
   }
 
 }

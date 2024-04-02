@@ -1,13 +1,33 @@
 import { Injectable } from '@angular/core';
 import { getAuth, Auth, signInWithEmailAndPassword } from 'firebase/auth';
 import { Preferences } from '@capacitor/preferences';
+import { Plugins } from '@capacitor/core';
+const { CapacitorHttp } = Plugins;
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class LoginService {
+  
+readonly BACKEND_API = 'https://bus-bus.onrender.com/';
 
   constructor() { }
+
+  public async verifyTokenIntegrity(token: string): Promise<boolean> {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    const data = { token: token };
+  
+    const response = await CapacitorHttp['post']({
+      url: this.BACKEND_API + "verifyTokenIntegrity",
+      data: data,
+      headers: headers
+    });
+  
+    return response.data;
+  }
 
   public async login(email: string, password: string): Promise<string | null> {
     const auth: Auth = getAuth();
@@ -71,7 +91,8 @@ export class LoginService {
   public async isLoggedIn(): Promise<boolean> {
     try {
       const token = await this.getToken();
-      return token !== '';
+      const isTokenValid = await this.verifyTokenIntegrity(token);
+      return isTokenValid;
     } catch (error) {
       console.error('Errore durante il controllo dello stato di accesso:', error);
       return false;

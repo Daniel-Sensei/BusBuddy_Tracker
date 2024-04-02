@@ -1,0 +1,49 @@
+<div class="blank-space"></div>
+
+<ion-toolbar class="top-segment">
+  <ion-title class="header">Dettagli Bus</ion-title>
+</ion-toolbar>
+
+
+
+<ion-item lines="none" style="margin-top: 10px;">
+  <ion-icon slot="start" aria-hidden="true" name="bus-outline" class="icon" size="large"></ion-icon>
+  <ion-label class="label">
+    <div class="bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+      bus.route.code.split('_')[0] }} - {{ destination }}</div>
+    <div>{{bus.route.company}}</div>
+  </ion-label>
+
+  <!--<ion-icon *ngIf="!this.favourite" (click)="addFavourite(true)" slot="end" aria-hidden="true" name="star-outline" class="icon"></ion-icon>
+    <ion-icon *ngIf="this.favourite" (click)="addFavourite(false)" slot="end" aria-hidden="true" name="star" class="icon"></ion-icon>-->
+
+</ion-item>
+
+<ion-accordion-group>
+  <ion-accordion value="first" (click)="resizeModal()">
+    <ion-item slot="header" style="margin-right: 10px;">
+      <ion-icon slot="start" aria-hidden="true" name="time-outline" class="icon" size="large"></ion-icon>
+      <ion-label class="label">
+        <div class="bold">Prossime fermate</div>
+        <div>Visualizza elenco delle fermate</div>
+      </ion-label>
+    </ion-item>
+
+    <div slot="content" style="margin-bottom: -2.5em;">
+
+
+      <ul>
+        <li *ngFor="let stop of stops; let i = index" [attr.data-content]="stop.name"
+          [ngClass]="{ 'active': bus.lastStop == i }"></li>
+      </ul>
+
+
+    </div>
+  </ion-accordion>
+</ion-accordion-group>
+
+<div class="div-center" style="margin-top: 2px;">
+  <ion-button shape="round">
+    Esci
+  </ion-button>
+</div>
