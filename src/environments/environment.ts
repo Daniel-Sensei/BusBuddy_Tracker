@@ -13,7 +13,8 @@ export const environment = {
     messagingSenderId: "1044655569384",
     appId: "1:1044655569384:web:f01efa60cfd6d7cfca0c5d",
     measurementId: "G-91JVDWWYCN"
-  }
+  },
+  BACKEND_API: 'https://bus-bus.onrender.com/',
 };
 
 

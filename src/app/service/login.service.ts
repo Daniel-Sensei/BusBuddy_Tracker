@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { getAuth, Auth, signInWithEmailAndPassword } from 'firebase/auth';
 import { Preferences } from '@capacitor/preferences';
+import { environment } from 'src/environments/environment';
 import { Plugins } from '@capacitor/core';
 const { CapacitorHttp } = Plugins;
 
@@ -10,8 +11,6 @@ const { CapacitorHttp } = Plugins;
 })
 export class LoginService {
   
-readonly BACKEND_API = 'https://bus-bus.onrender.com/';
-
   constructor() { }
 
   public async verifyTokenIntegrity(token: string): Promise<boolean> {
@@ -21,7 +20,7 @@ readonly BACKEND_API = 'https://bus-bus.onrender.com/';
     const data = { token: token };
   
     const response = await CapacitorHttp['post']({
-      url: this.BACKEND_API + "verifyTokenIntegrity",
+      url: environment.BACKEND_API + "verifyTokenIntegrity",
       data: data,
       headers: headers
     });
@@ -87,7 +86,6 @@ readonly BACKEND_API = 'https://bus-bus.onrender.com/';
     }
   }
 
-  //implemneta isLoggedin
   public async isLoggedIn(): Promise<boolean> {
     try {
       const token = await this.getToken();
