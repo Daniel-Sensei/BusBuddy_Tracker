@@ -28,7 +28,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   loading = true;
 
   // Dichiarazione della variabile all'interno del componente
-timerValue: string = '00:00';
+timerValue: string = '00:00:00';
 private intervalId: any;
 
 
@@ -156,10 +156,14 @@ private intervalId: any;
     // Avvia l'intervallo e memorizza l'ID restituito da setInterval()
     this.intervalId = setInterval(() => {
         elapsedTimeInSeconds++;
-        // Converti il tempo trascorso in formato "mm:ss"
-        const minutes = Math.floor(elapsedTimeInSeconds / 60);
+        // Calcola ore, minuti e secondi
+        const hours = Math.floor(elapsedTimeInSeconds / 3600);
+        const minutes = Math.floor((elapsedTimeInSeconds % 3600) / 60);
         const seconds = elapsedTimeInSeconds % 60;
-        const formattedTime = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        
+        // Formatta il tempo in "HH:MM:SS"
+        const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        
         // Aggiorna il valore del timer nell'interfaccia
         this.timerValue = formattedTime;
     }, 1000);

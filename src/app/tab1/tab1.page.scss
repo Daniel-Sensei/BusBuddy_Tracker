@@ -68,14 +68,14 @@ li::before {
 }
 
 li::after {
-    content: attr(data-content) '\a Arrivo: 17:52 \a Ritardo: +5 min' url("data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='14' width='85'><text style='alignment-baseline:hanging;font-size:14px;font-family:Arial,sans-serif;fill:#000;'><tspan style='alignment-baseline:inherit;font-weight:bold;'>Bold</tspan> not bold</text></svg>");
+    content: attr(data-content) '\a' attr(address-content);
     white-space: pre-wrap;
     /* Per consentire al testo di andare a capo */
     font-weight: bold;
     font-size: 17px;
 
     position: absolute;
-    top: -1.0em;
+    top: -0.5em;
     left: 2em; //margine sinistro del testo
     width: 18em;
     height: .2em;
@@ -161,3 +161,19 @@ li:first-child::before {
         background: #fff;
     }
 }
+
+.button-container {
+    position: relative;
+  }
+  
+  .start-button {
+    position: relative;
+    z-index: 1; /* Imposta il pulsante sopra la gif */
+  }
+  
+  .background-gif {
+    
+    top: 40%;
+    transform: translateY(-50%);
+    width: 300px;
+  }

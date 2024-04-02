@@ -64,7 +64,7 @@
 
 
               <ul>
-                <li *ngFor="let stop of stops; let i = index" [attr.data-content]="stop.name"
+                <li *ngFor="let stop of stops; let i = index" [attr.data-content]="stop.name" [attr.address-content]="stop.address"
                   [ngClass]="{ 'active': bus.lastStop == i }"></li>
               </ul>
 
