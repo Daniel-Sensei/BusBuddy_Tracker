@@ -19,7 +19,7 @@
       <ion-input type="email" [(ngModel)]="busCode" (ngModelChange)="validateBusCode()" (ionChange)="onBusCodeChange()"></ion-input>
     </ion-item>
 
-    <div *ngIf="credentialsRight && lines.length === 0" class="loading-overlay">
+    <div *ngIf="loading" class="loading-overlay">
       <!-- Aggiungi qui l'effetto di caricamento, ad esempio uno spinner -->
       <ion-spinner></ion-spinner>
     </div>

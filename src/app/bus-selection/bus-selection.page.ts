@@ -29,6 +29,8 @@ export class BusSelectionPage implements OnInit {
   credentialsWrong: boolean = false; // Variabile per memorizzare lo stato di errore delle credenziali
   credentialsRight: boolean = false; // Variabile per memorizzare lo stato di correttezza delle credenziali
 
+  loading: boolean = false; // Variabile per memorizzare lo stato di caricamento
+
   constructor(private busService: BusService, private route: ActivatedRoute, private router: Router, private loginService: LoginService) { }
 
   ngOnInit() {
@@ -47,7 +49,9 @@ export class BusSelectionPage implements OnInit {
 
   onBusCodeChange() {
     console.log('Codice pullman cambiato:', this.busCode);
+    this.loading = true;
     this.busService.getRoutesByBusCode(this.busCode).then((routes) => {
+      this.loading = false;
       if (routes.length > 0) {
         console.log('Rotte trovate per il pullman', routes);
         this.credentialsWrong = false;
@@ -97,9 +101,11 @@ export class BusSelectionPage implements OnInit {
     this.busService.updateBusRoute(this.busCode, routeId).then((result) => {
       console.log('Risultato dell\'aggiornamento del percorso del pullman:', result);
 
-      this.loginService.setBusCode(this.busCode).then(() => {
-        // Reindirizza l'utente alla pagina '' senza passare alcun parametro e ricarica la pagina
-        this.router.navigate([''], { replaceUrl: true });
+      this.loginService.saveToken(this.token).then(() => {
+        this.loginService.saveBusCode(this.busCode).then(() => {
+          // Reindirizza l'utente alla pagina '' senza passare alcun parametro e ricarica la pagina
+          this.router.navigate([''], { replaceUrl: true });
+        });
       });
     });
   }

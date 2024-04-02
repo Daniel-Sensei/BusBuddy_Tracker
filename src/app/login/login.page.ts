@@ -15,10 +15,7 @@ export class LoginPage {
   password!: string;
 
   emailValid: boolean = false;
-  emailInputClass: string = '';
-
   passwordValid: boolean = false;
-  passwordInputClass: string = '';
 
   credentialsWrong: boolean = false;
 
@@ -50,18 +47,12 @@ export class LoginPage {
   validateEmail() {
     // Utilizza una semplice espressione regolare per controllare se l'email è valida
     this.emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email);
-    // Imposta la classe CSS in base alla validità dell'email
-    this.emailInputClass = this.emailValid ? 'valid-input' : 'invalid-input';
-
     this.credentialsWrong = false;
   }
 
   validatePassword() {
     // Controlla se la password è stata inserita
     this.passwordValid = Boolean(this.password && this.password.trim() !== '');
-    // Imposta la classe CSS in base alla validità della password
-    this.passwordInputClass = this.passwordValid ? 'valid-input' : 'invalid-input';
-
     this.credentialsWrong = false;
   }
 }

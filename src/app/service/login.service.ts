@@ -16,12 +16,6 @@ export class LoginService {
       // Accesso riuscito, restituisci l'ID token dell'utente
       const user = userCredential.user;
       const idToken = await user.getIdToken();
-      
-      // Salvataggio del token in Preferences
-      await Preferences.set({
-        key: 'authToken',
-        value: idToken
-      });
 
       return idToken;
     } catch (error) {
@@ -31,7 +25,28 @@ export class LoginService {
     }
   }
 
-  public async setBusCode(busCode: string): Promise<void> {
+  public async saveToken(token: string): Promise<void> {
+    try {
+      await Preferences.set({
+        key: 'authToken',
+        value: token
+      });
+    } catch (error) {
+      console.error('Errore durante il salvataggio del token:', error);
+    }
+  }
+
+  public async getToken(): Promise<string> {
+    try {
+      const result = await Preferences.get({ key: 'authToken' });
+      return result.value || ''; // Restituisce il token se presente, altrimenti una stringa vuota
+    } catch (error) {
+      console.error('Errore durante il recupero del token:', error);
+      return '';
+    }
+  }
+
+  public async saveBusCode(busCode: string): Promise<void> {
     try {
       await Preferences.set({
         key: 'busCode',
@@ -48,16 +63,6 @@ export class LoginService {
       return result.value || ''; // Restituisce il codice del pullman se presente, altrimenti una stringa vuota
     } catch (error) {
       console.error('Errore durante il recupero del codice del pullman:', error);
-      return '';
-    }
-  }
-
-  public async getToken(): Promise<string> {
-    try {
-      const result = await Preferences.get({ key: 'authToken' });
-      return result.value || ''; // Restituisce il token se presente, altrimenti una stringa vuota
-    } catch (error) {
-      console.error('Errore durante il recupero del token:', error);
       return '';
     }
   }
