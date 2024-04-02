@@ -5,7 +5,7 @@ import { AuthGuard } from './auth.guard';
 const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./tab1/tab1.module').then(m => m.Tab1PageModule),
+    loadChildren: () => import('./tracking/tracking.module').then(m => m.TrackingPageModule),
     canActivate: [AuthGuard] // Utilizzo della guardia di autenticazione per proteggere la navigazione alla home
   },
   {
@@ -15,7 +15,8 @@ const routes: Routes = [
   {
     path: 'bus-selection',
     loadChildren: () => import('./bus-selection/bus-selection.module').then( m => m.BusSelectionPageModule)
-  },  {
+  },
+  {
     path: 'bus-details',
     loadChildren: () => import('./bus-details/bus-details.module').then( m => m.BusDetailsPageModule)
   },

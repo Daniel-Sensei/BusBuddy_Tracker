@@ -2,9 +2,9 @@ import { IonicModule } from '@ionic/angular';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Tab1Page } from './tab1.page';
+import { TrackingPage } from './tracking.page';
 
-import { Tab1PageRoutingModule } from './tab1-routing.module';
+import { TrackingPageRoutingModule } from './tracking-routing.module';
 import { BusDetailsPageModule } from '../bus-details/bus-details.module';
 
 @NgModule({
@@ -12,10 +12,10 @@ import { BusDetailsPageModule } from '../bus-details/bus-details.module';
     IonicModule,
     CommonModule,
     FormsModule,
-    Tab1PageRoutingModule,
+    TrackingPageRoutingModule,
     
     BusDetailsPageModule
   ],
-  declarations: [Tab1Page]
+  declarations: [TrackingPage]
 })
-export class Tab1PageModule {}
+export class TrackingPageModule {}

@@ -15,10 +15,10 @@ import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-tab1',
-  templateUrl: 'tab1.page.html',
-  styleUrls: ['tab1.page.scss']
+  templateUrl: 'tracking.page.html',
+  styleUrls: ['tracking.page.scss']
 })
-export class Tab1Page implements OnInit, OnDestroy {
+export class TrackingPage implements OnInit, OnDestroy {
 
   tracking = false;
   firebaseDB: any;
