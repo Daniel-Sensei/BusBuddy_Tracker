@@ -1,3 +1,8 @@
+ion-toolbar {
+    --background: var(--ion-color-primary);
+}
+
+/* BUTTON and TIMER */
 #container {
     text-align: center;
     position: absolute;
@@ -7,20 +12,66 @@
     transform: translateY(-50%);
 }
 
+.start-button {
+    --border-radius: 100%;
+    width: 220px;
+    height: 220px;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.big-label {
+    font-size: 50px;
+}
+
+/* MODAL */
+
+/* Modal Content */
 .modal-rounded::part(handle) {
     background-color: var(--ion-color-primary);
-    /* Cambia il colore di sfondo della barra di handle */
     height: 4px;
-    /* Imposta l'altezza della barra di handle */
     width: 72px;
     margin-top: 10px;
-    /* Imposta il margine superiore della barra di handle */
 }
 
 .modal-rounded::part(content) {
     border-radius: 20px 20px 0 0px; // Here the border radius
     box-shadow: 0px 0px 20px 5px rgb(0 0 0 / 15%);
     padding-top: 10px;
+}
+
+/* Modal Header */
+.blank-space {
+    position: sticky;
+    top: -20px;
+    z-index: 1000;
+    height: 22px;
+    background: var(--ion-item-background);
+
+    //imposta il colore di sfondo bianco per il tema chiaro
+    @media (prefers-color-scheme: light) {
+        background: #fff;
+    }
+}
+
+.top-segment {
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    --background: var(--ion-item-background);
+
+    //imposta il colore di sfondo bianco per il tema chiaro
+    @media (prefers-color-scheme: light) {
+        --background: #fff;
+    }
+
+    margin-top: -30px;
+
+}
+
+.header {
+    text-align: center;
+    padding-left: 0;
 }
 
 .bold {
@@ -34,11 +85,12 @@
     justify-content: center;
 }
 
+
+/* Next Stops */
 ul {
     list-style-type: none;
     margin-top: -2.4em;
 }
-
 
 li {
     width: 1.25em; //diametro del pallino
@@ -83,9 +135,6 @@ li::after {
     z-index: -1;
 }
 
-
-
-
 li:first-child::before {
     display: none;
 }
@@ -102,78 +151,9 @@ li:first-child::before {
     background: var(--ion-color-primary-tint);
 }
 
+/* Exit button */
 .div-center {
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
-.header {
-    text-align: center;
-    padding-left: 0;
-
-}
-
-.start-button {
-    --border-radius: 100%;
-    width: 220px;
-    height: 220px;
-    font-size: 30px;
-    font-weight: bold;
-}
-
-.big-label{
-    font-size: 50px;
-}
-
-
-
-
-.top-segment {
-    position: sticky;
-    top: 0;
-    z-index: 1100;
-
-    /* Assicura che il segmento sia sopra all'header */
-    --background: var(--ion-item-background);
-
-    //imposta il colore di sfondo bianco per il tema chiaro
-    @media (prefers-color-scheme: light) {
-        --background: #fff;
-    }
-
-    margin-top: -30px;
-    /* Sposta il segmento sopra lo spazio bianco */
-    //padding-top: 10px;
-}
-
-.blank-space {
-    position: sticky;
-    top: -20px;
-    z-index: 1000;
-    height: 22px;
-
-
-    background: var(--ion-item-background);
-
-    //imposta il colore di sfondo bianco per il tema chiaro
-    @media (prefers-color-scheme: light) {
-        background: #fff;
-    }
-}
-
-.button-container {
-    position: relative;
-  }
-  
-  .start-button {
-    position: relative;
-    z-index: 1; /* Imposta il pulsante sopra la gif */
-  }
-  
-  .background-gif {
-    
-    top: 40%;
-    transform: translateY(-50%);
-    width: 300px;
-  }

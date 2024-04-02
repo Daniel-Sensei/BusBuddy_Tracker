@@ -77,11 +77,6 @@ export class BusSelectionPage implements OnInit {
     });
   }
 
-  handleChangeLine(event: any) {
-    this.selectedLine = event.target.value.id;
-    console.log('Linea selezionata:', this.selectedLine);
-  }
-
   onSelectBus() {
     // Qui puoi implementare la logica per gestire la selezione del pullman
     // Ad esempio, puoi inviare il codice del pullman e la linea selezionata al servizio per il tuo business logic
@@ -113,5 +108,10 @@ export class BusSelectionPage implements OnInit {
   validateBusCode() {
     this.busCodeValid = Boolean(this.busCode && this.busCode.trim() !== '');
     this.credentialsWrong = false;
+  }
+
+  handleChangeLine(event: any) {
+    this.selectedLine = event.target.value.id;
+    console.log('Linea selezionata:', this.selectedLine);
   }
 }

@@ -8,31 +8,36 @@
   <div class="container">
     <ion-img src="../../assets/bus.png" style="margin-bottom: 10px;"></ion-img>
 
-
     <div class="title">Seleziona bus</div>
-    <div class="subtitle">Inserisci il codice univoco del veicolo e seleziona la linea di appartenenza per iniziare il monitoraggio.
+    <div class="subtitle">Inserisci il codice univoco del veicolo e seleziona la linea di appartenenza per iniziare il
+      monitoraggio.
     </div>
 
 
-    <ion-item class="input" [class.invalid-input]="!busCodeValid" [class.right-input]="credentialsRight" [class.wrong-input]="credentialsWrong">
+    <ion-item class="input" [class.invalid-input]="!busCodeValid" [class.right-input]="credentialsRight"
+      [class.wrong-input]="credentialsWrong">
       <ion-label position="floating">Codice Veicolo</ion-label>
-      <ion-input type="email" [(ngModel)]="busCode" (ngModelChange)="validateBusCode()" (ionChange)="onBusCodeChange()"></ion-input>
+      <ion-input type="email" [(ngModel)]="busCode" (ngModelChange)="validateBusCode()"
+        (ionChange)="onBusCodeChange()"></ion-input>
     </ion-item>
 
+
     <div *ngIf="loading" class="loading-overlay">
-      <!-- Aggiungi qui l'effetto di caricamento, ad esempio uno spinner -->
       <ion-spinner></ion-spinner>
     </div>
 
-      <ion-select (ionChange)="handleChangeLine($event)" label="Linee" label-placement="floating" fill="outline" class="selector" [disabled]="lines.length === 0">
-        <ion-select-option *ngFor="let line of lines" [value]="line">{{ line.code }}</ion-select-option>
-      </ion-select>
 
-  
+    <ion-select (ionChange)="handleChangeLine($event)" label="Linee" label-placement="floating" fill="outline"
+      class="selector" [disabled]="lines.length === 0">
+      <ion-select-option *ngFor="let line of lines" [value]="line">{{ line.code }}</ion-select-option>
+    </ion-select>
+    
 
-    <ion-button class="login-button" (click)="onSelectBus()" [disabled]="!busCodeValid || selectedLine === undefined || credentialsWrong">Seleziona Linea</ion-button>
-    <div class="subtitle" style="color: var(--ion-color-danger);" *ngIf="credentialsWrong">Codice del veicolo non valido. Si prega di modificare i dati e riprovare.</div>
+    <ion-button class="login-button" (click)="onSelectBus()"
+      [disabled]="!busCodeValid || selectedLine === undefined || credentialsWrong">Seleziona Linea</ion-button>
+    <div class="subtitle" style="color: var(--ion-color-danger);" *ngIf="credentialsWrong">Codice del veicolo non
+      valido. Si prega di modificare i dati e riprovare.</div>
 
   </div>
-  
+
 </ion-content>

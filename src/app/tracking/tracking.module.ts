@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { TrackingPage } from './tracking.page';
 
 import { TrackingPageRoutingModule } from './tracking-routing.module';
-import { BusDetailsPageModule } from '../bus-details/bus-details.module';
 
 @NgModule({
   imports: [
@@ -13,8 +12,6 @@ import { BusDetailsPageModule } from '../bus-details/bus-details.module';
     CommonModule,
     FormsModule,
     TrackingPageRoutingModule,
-    
-    BusDetailsPageModule
   ],
   declarations: [TrackingPage]
 })

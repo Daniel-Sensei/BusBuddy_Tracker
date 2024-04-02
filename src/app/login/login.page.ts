@@ -2,8 +2,6 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../service/login.service';
 import { NavigationExtras } from '@angular/router';
-import { BusService } from '../service/bus.service';
-
 
 @Component({
   selector: 'app-login',
@@ -32,7 +30,6 @@ export class LoginPage {
             email: this.email
           }
         };
-
         // Reindirizza l'utente alla pagina bus-selection con il token come parametro query
         this.router.navigate(['/bus-selection'], navigationExtras);
       }
@@ -40,9 +37,7 @@ export class LoginPage {
       console.error('Errore durante il login!');
       this.credentialsWrong = true;
     });
-
   }
-
 
   validateEmail() {
     // Utilizza una semplice espressione regolare per controllare se l'email è valida

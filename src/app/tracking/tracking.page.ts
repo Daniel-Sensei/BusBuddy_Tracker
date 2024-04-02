@@ -20,22 +20,37 @@ import { AlertController } from '@ionic/angular';
 })
 export class TrackingPage implements OnInit, OnDestroy {
 
-  tracking = false;
   firebaseDB: any;
+
+  /* Tracking */
+  tracking = false;
   watcherId: any;
+  onlyForward = false;
+  lastStopName = '';
   BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
+  // Used by the Geolocation API to get the current position
+  options = {
+    backgroundMessage: "Cancel to prevent battery drain.",
+    backgroundTitle: "Tracking You.",
+    requestPermissions: true,
+    stale: false,
+    distanceFilter: 0 // 50m of distance between updates
+  };
+
+  /* Modal */
+  @ViewChild('modal', { static: true }) modal!: IonModal; // Ottieni il riferimento al modal
+  accordionOpen: boolean = false;
+  destination: string = "";
   stops: any;
+
   loading = true;
 
-  // Dichiarazione della variabile all'interno del componente
-timerValue: string = '00:00:00';
-private intervalId: any;
+  /* Timer */
+  timerValue: string = '00:00:00';
+  private intervalId: any;
 
-
-
-  @ViewChild('modal', { static: true }) modal!: IonModal; // Ottieni il riferimento al modal
   bus: Bus = {
-    id: '', //TODO: Replace with your bus ID by authenticating with Firebase
+    id: '',
     code: '', //CH349ZY
     coords: {
       latitude: 0,
@@ -62,19 +77,12 @@ private intervalId: any;
     lastStop: -1
   };
 
-  onlyForward = false;
-  lastStopName = '';
-
-  // Used by the Geolocation API to get the current position
-  options = {
-    backgroundMessage: "Cancel to prevent battery drain.",
-    backgroundTitle: "Tracking You.",
-    requestPermissions: true,
-    stale: false,
-    distanceFilter: 0 // 50m of distance between updates
-  };
-
-  constructor(private busService: BusService, private loginService: LoginService, private router: Router, private alertController: AlertController) {
+  constructor(
+    private busService: BusService,
+    private loginService: LoginService,
+    private router: Router,
+    private alertController: AlertController
+  ) {
     this.firebaseDB = getDatabase();
   }
 
@@ -87,32 +95,9 @@ private intervalId: any;
         console.log('Codice pullman ricevuto:', busCode);
         this.bus.code = busCode;
         this.getBus(busCode, token);
-
       });
     });
   }
-
-  /*
-  async getToken() {
-    this.loginService.login("consorzio.autolinee@cosenza.it", "consorzio")
-      .then(token => {
-        if (token) {
-          console.log('Accesso riuscito. Token:', token);
-          this.token = token;
-          // Esegui le operazioni necessarie dopo l'accesso
-          this.getBus(this.bus.code, this.token);
-        } else {
-          console.log('Accesso non riuscito.');
-          // Gestisci il fallimento dell'accesso
-        }
-      })
-      .catch(error => {
-        console.error('Errore durante il login:', error);
-        // Gestisci gli errori di autenticazione
-      });
-  }
-  */
-
 
   async getBus(code: string, token: string) {
     try {
@@ -125,49 +110,12 @@ private intervalId: any;
       }
       this.bus.direction = '';
       console.log('Only forward:', this.onlyForward);
-      //this.startTracking();
 
-      this.updateStopsAndDestination();
+      this.updateStopsAndDestination(); // in the modal
     } catch (error) {
       console.error('Error getting bus', error);
     }
   }
-
-  updateStopsAndDestination() {
-    if (this.bus.direction === "back") {
-      this.stops = Object.values(this.bus.route.stops.backStops);
-      this.getDestination(true);
-    }
-    else {
-      this.stops = Object.values(this.bus.route.stops.forwardStops);
-      this.destination = this.getDestination();
-    }
-  }
-
-
-  ngOnDestroy() {
-    // Stop tracking when the component is destroyed
-    this.stopTracking();
-  }
-
-  startTimer() {
-    let elapsedTimeInSeconds = 0;
-
-    // Avvia l'intervallo e memorizza l'ID restituito da setInterval()
-    this.intervalId = setInterval(() => {
-        elapsedTimeInSeconds++;
-        // Calcola ore, minuti e secondi
-        const hours = Math.floor(elapsedTimeInSeconds / 3600);
-        const minutes = Math.floor((elapsedTimeInSeconds % 3600) / 60);
-        const seconds = elapsedTimeInSeconds % 60;
-        
-        // Formatta il tempo in "HH:MM:SS"
-        const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        
-        // Aggiorna il valore del timer nell'interfaccia
-        this.timerValue = formattedTime;
-    }, 1000);
-}
 
   async startTracking() {
     try {
@@ -261,12 +209,12 @@ private intervalId: any;
         const stop = stops[i];
         const distance = this.calculateDistance(busCoords.latitude, busCoords.longitude, stop.coords.latitude, stop.coords.longitude);
         if (distance < 0.05 && this.lastStopName != stop.name) { // 50m of distance
-            console.log('Stop reached', stop);
-            stopReached = true;
-            this.bus.lastStop = i;
-            this.lastStopName = stop.name;
-            //this.updateDirectionAndStop();
-            break;
+          console.log('Stop reached', stop);
+          stopReached = true;
+          this.bus.lastStop = i;
+          this.lastStopName = stop.name;
+          //this.updateDirectionAndStop();
+          break;
         }
       }
     } else {
@@ -347,7 +295,7 @@ private intervalId: any;
     return deg * (Math.PI / 180);
   }
 
-  async requestStopTracking(){
+  async requestStopTracking() {
     const alert = await this.alertController.create({
       header: 'Conferma',
       message: 'Sei sicuro di voler interrompere il tracciamento?',
@@ -383,40 +331,50 @@ private intervalId: any;
   }
 
   // Aggiorna il metodo logout per visualizzare un popup di conferma prima del logout
-async logout() {
-  const alert = await this.alertController.create({
-    header: 'Conferma',
-    message: 'Sei sicuro di voler effettuare il logout?',
-    buttons: [
-      {
-        text: 'Annulla',
-        role: 'cancel',
-        handler: () => {
-          // L'utente ha annullato, non fare nulla
+  async logout() {
+    const alert = await this.alertController.create({
+      header: 'Conferma',
+      message: 'Sei sicuro di voler effettuare il logout?',
+      buttons: [
+        {
+          text: 'Annulla',
+          role: 'cancel',
+          handler: () => {
+            // L'utente ha annullato, non fare nulla
+          }
+        },
+        {
+          text: 'Conferma',
+          handler: () => {
+            // L'utente ha confermato, esegui il logout
+            this.performLogout();
+          }
         }
-      },
-      {
-        text: 'Conferma',
-        handler: () => {
-          // L'utente ha confermato, esegui il logout
-          this.performLogout();
-        }
-      }
-    ]
-  });
+      ]
+    });
 
-  await alert.present();
-}
+    await alert.present();
+  }
 
-// Metodo per eseguire il logout effettivo
-private performLogout() {
-  this.loginService.logout().then(() => {
-    // Reindirizza l'utente alla pagina di login senza passare alcun parametro e ricarica la pagina
-    this.router.navigate(['login'], { replaceUrl: true });
-  });
-}
+  // Metodo per eseguire il logout effettivo
+  private performLogout() {
+    this.loginService.logout().then(() => {
+      // Reindirizza l'utente alla pagina di login senza passare alcun parametro e ricarica la pagina
+      this.router.navigate(['login'], { replaceUrl: true });
+    });
+  }
 
-  accordionOpen: boolean = false;
+  /* MODAL */
+  updateStopsAndDestination() {
+    if (this.bus.direction === "back") {
+      this.stops = Object.values(this.bus.route.stops.backStops);
+      this.getDestination(true);
+    }
+    else {
+      this.stops = Object.values(this.bus.route.stops.forwardStops);
+      this.destination = this.getDestination();
+    }
+  }
 
   resizeModal() {
     this.accordionOpen = !this.accordionOpen;
@@ -424,7 +382,6 @@ private performLogout() {
     this.modal.setCurrentBreakpoint(breakpoint);
   }
 
-  destination: string = "";
   getDestination(back = false): string {
     let destination = "";
     let code = this.bus.route.code.split("_")[1];
@@ -440,16 +397,34 @@ private performLogout() {
     return destination;
   }
 
-  /*
-  ionViewWillEnter() {
-    console.log('ionViewWillEnter');
-    this.ngOnInit();
+  /* TIMER */
+  startTimer() {
+    let elapsedTimeInSeconds = 0;
+
+    // Avvia l'intervallo e memorizza l'ID restituito da setInterval()
+    this.intervalId = setInterval(() => {
+      elapsedTimeInSeconds++;
+      // Calcola ore, minuti e secondi
+      const hours = Math.floor(elapsedTimeInSeconds / 3600);
+      const minutes = Math.floor((elapsedTimeInSeconds % 3600) / 60);
+      const seconds = elapsedTimeInSeconds % 60;
+
+      // Formatta il tempo in "HH:MM:SS"
+      const formattedTime = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+      // Aggiorna il valore del timer nell'interfaccia
+      this.timerValue = formattedTime;
+    }, 1000);
   }
-  */
 
   ionViewWillLeave() {
     this.modal.dismiss();
     this.loading = true;
+    this.stopTracking();
+  }
+
+  ngOnDestroy() {
+    // Stop tracking when the component is destroyed
     this.stopTracking();
   }
 
