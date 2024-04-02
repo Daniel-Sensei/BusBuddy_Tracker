@@ -378,7 +378,7 @@ export class TrackingPage implements OnInit, OnDestroy {
 
   resizeModal() {
     this.accordionOpen = !this.accordionOpen;
-    const breakpoint = this.accordionOpen ? 1 : 0.30;
+    const breakpoint = this.accordionOpen ? 1 : 0.33;
     this.modal.setCurrentBreakpoint(breakpoint);
   }
 

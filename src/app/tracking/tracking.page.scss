@@ -157,3 +157,12 @@ li:first-child::before {
     align-items: center;
     justify-content: center;
 }
+
+.div-center ion-button {
+
+    //imposta margine personalizzato se la lunghezza è maggiore di 1000px in verticale
+    @media (min-height: 890px) {
+      //for long phone
+      margin-top: 25px;
+    }
+  }
