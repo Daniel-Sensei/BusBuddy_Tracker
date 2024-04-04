@@ -36,6 +36,7 @@ export class TrackingPage implements OnInit, OnDestroy {
     stale: false,
     distanceFilter: 0 // 50m of distance between updates
   };
+  permissionChecked = false;
 
   /* Modal */
   @ViewChild('modal', { static: true }) modal!: IonModal; // Ottieni il riferimento al modal
@@ -118,12 +119,10 @@ export class TrackingPage implements OnInit, OnDestroy {
   }
 
   async startTracking() {
+    this.permissionChecked = false;
+    
     try {
-      // Inizializza il tempo trascorso a zero
-      this.startTimer();
-
       LocalNotifications.requestPermissions().then((permission) => {
-        this.tracking = true;
         this.BackgroundGeolocation.addWatcher(this.options, async (location, error) => {
           if (error) {
             if (error.code === "NOT_AUTHORIZED") {
@@ -138,6 +137,12 @@ export class TrackingPage implements OnInit, OnDestroy {
             console.error(error);
             return;
           }
+          if(!this.permissionChecked){
+            this.tracking = true;
+            // Inizializza il tempo trascorso a zero
+            this.startTimer();
+          }
+          this.permissionChecked = true;
 
           if (this.tracking) {
             // Handle the location update
@@ -169,6 +174,7 @@ export class TrackingPage implements OnInit, OnDestroy {
             this.BackgroundGeolocation.removeWatcher({ id: this.watcherId }).then(() => {
               console.log('Watcher removed')
             });
+            //this.permissionChecked = false;
           }
         }).then((watcherId) => {
           this.watcherId = watcherId; // Memorizza l'ID del watcher
@@ -327,7 +333,9 @@ export class TrackingPage implements OnInit, OnDestroy {
     this.bus.lastStop = -1;
     this.lastStopName = '';
     clearInterval(this.intervalId);
-
+    this.bus.coords.latitude = 0;
+    this.bus.coords.longitude = 0;
+    this.updateRealTimeCoords(this.bus.coords, this.bus.direction, this.bus.lastStop, 0);
   }
 
   // Aggiorna il metodo logout per visualizzare un popup di conferma prima del logout
