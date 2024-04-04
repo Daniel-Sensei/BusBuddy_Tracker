@@ -94,14 +94,14 @@ export class TrackingPage implements OnInit, OnDestroy {
       this.loginService.getBusCode().then(busCode => {
         console.log('Codice pullman ricevuto:', busCode);
         this.bus.code = busCode;
-        this.getBus(busCode, token);
+        this.getBus(busCode);
       });
     });
   }
 
-  async getBus(code: string, token: string) {
+  async getBus(code: string) {
     try {
-      const data = await this.busService.getBusByCode(code, token);
+      const data = await this.busService.getBusByCode(code);
       this.bus = data;
       this.loading = false;
       console.log('Bus loaded', this.bus);

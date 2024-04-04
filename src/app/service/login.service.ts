@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getAuth, Auth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, Auth, signInWithEmailAndPassword, signInWithCustomToken } from 'firebase/auth';
 import { Preferences } from '@capacitor/preferences';
 import { environment } from 'src/environments/environment';
 import { Plugins } from '@capacitor/core';
@@ -10,21 +10,29 @@ const { CapacitorHttp } = Plugins;
   providedIn: 'root'
 })
 export class LoginService {
-  
+
   constructor() { }
 
-  public async verifyTokenIntegrity(token: string): Promise<boolean> {
-    const headers = {
-      'Content-Type': 'application/json'
+  public async generateCustomToken(uid: string): Promise<string> {
+    const response = await CapacitorHttp['get']({
+      url: environment.BACKEND_API + "generate-custom-token",
+      params: { uid: uid }
+    });
+    return response.data;
+  }
+
+  public async verifyCustomToken(token: string): Promise<boolean> {
+    //passa nell'header il token nel campo Authorization
+    //il token deve essere preceduto dalla stringa "Bearer "
+    const headers
+      = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
     };
-    const data = { token: token };
-  
-    const response = await CapacitorHttp['post']({
-      url: environment.BACKEND_API + "verifyTokenIntegrity",
-      data: data,
+    const response = await CapacitorHttp['get']({
+      url: environment.BACKEND_API + "verify-custom-token",
       headers: headers
     });
-  
     return response.data;
   }
 
@@ -34,12 +42,13 @@ export class LoginService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       // Accesso riuscito, restituisci l'ID token dell'utente
       const user = userCredential.user;
-      const idToken = await user.getIdToken();
+      console.log("uid: ", user.uid);
+      const customToken = await this.generateCustomToken(user.uid);
+      console.log("customToken: ", customToken);
 
-      return idToken;
+      return customToken;
     } catch (error) {
       console.error('Errore durante il login:', error);
-      console.log("PASSO ERRORE");
       throw error; // Rethrow the error to be handled by the calling function
     }
   }
@@ -89,7 +98,7 @@ export class LoginService {
   public async isLoggedIn(): Promise<boolean> {
     try {
       const token = await this.getToken();
-      const isTokenValid = await this.verifyTokenIntegrity(token);
+      const isTokenValid = await this.verifyCustomToken(token);
       return isTokenValid;
     } catch (error) {
       console.error('Errore durante il controllo dello stato di accesso:', error);

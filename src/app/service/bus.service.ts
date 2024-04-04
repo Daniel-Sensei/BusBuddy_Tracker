@@ -18,18 +18,11 @@ export class BusService {
     return response.data;
   }
 
-  public async getBusByCode(code: string, token: string): Promise<any> {
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    const data = { code: code, token: token };
-  
-    const response = await CapacitorHttp['post']({
+  public async getBusByCode(code: string): Promise<any> {
+    const response = await CapacitorHttp['get']({
       url: environment.BACKEND_API + "busByCode",
-      data: data,
-      headers: headers
+      params: { code: code }
     });
-  
     return response.data;
   }
 
