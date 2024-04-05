@@ -23,6 +23,7 @@ export class TrackingPage implements OnInit, OnDestroy {
   firebaseDB: any;
 
   /* Tracking */
+  readonly GEOFENCE_RADIUS = 0.075; // 75m of radius
   tracking = false;
   watcherId: any;
   onlyForward = false;
@@ -88,7 +89,6 @@ export class TrackingPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    console.log('TrackButtonComponent INIT!!!!!!!!!!!!!!!');
     //TODO: Token must be passed in Input from login component or taken by the memory of the device
     this.loginService.getToken().then(token => {
       console.log('Token Ricevuto:', token);
@@ -110,6 +110,7 @@ export class TrackingPage implements OnInit, OnDestroy {
         this.onlyForward = true;
       }
       this.bus.direction = '';
+      this.bus.lastStop = -1;
       console.log('Only forward:', this.onlyForward);
 
       this.updateStopsAndDestination(); // in the modal
@@ -187,7 +188,6 @@ export class TrackingPage implements OnInit, OnDestroy {
 
   updateRealTimeCoords(coords: any, direction: string, lastStop: number, speed: number | null | undefined) {
     // Aggiorna il Realtime Database di Firebase con la nuova posizione
-    console.log("params: ", coords, direction, lastStop, speed);
     const dbRef = ref(this.firebaseDB, 'buses/' + this.bus.id);
     set(dbRef, {
       coords: {
@@ -207,20 +207,22 @@ export class TrackingPage implements OnInit, OnDestroy {
     // Controlla se il bus è vicino a una fermata
     let stopReached = false;
 
-    console.log("VEDIAMO SE RICORDA", this.bus.direction);
     if (this.bus.direction !== undefined && this.bus.direction !== '') {
       console.log("direction: ", this.bus.direction);
       const stops = this.getStopsByDirection();
       for (let i = this.bus.lastStop + 1; i < stops.length; i++) { //escludo se stesso
         const stop = stops[i];
         const distance = this.calculateDistance(busCoords.latitude, busCoords.longitude, stop.coords.latitude, stop.coords.longitude);
-        if (distance < 0.05 && this.lastStopName != stop.name) { // 50m of distance
+        if (distance < this.GEOFENCE_RADIUS && this.lastStopName != stop.name) { // 50m of distance
           console.log('Stop reached', stop);
           stopReached = true;
           this.bus.lastStop = i;
           this.lastStopName = stop.name;
           //this.updateDirectionAndStop();
           break;
+        }
+        else{
+          console.log("Distance from [", stop.name, "]= ", distance);
         }
       }
     } else {
@@ -249,8 +251,7 @@ export class TrackingPage implements OnInit, OnDestroy {
     let i = 0;
     for (const stop of stops) {
       const distance = this.calculateDistance(busCoords.latitude, busCoords.longitude, stop.coords.latitude, stop.coords.longitude);
-      if (distance < 0.05) { // 50m of distance
-        console.log('Stop reached without direction: ', stop);
+      if (distance < this.GEOFENCE_RADIUS) { // 50m of distance
         stopReached = true;
         this.bus.lastStop = i;
         this.bus.direction = direction;
