@@ -156,14 +156,16 @@ export class TrackingPage implements OnInit, OnDestroy {
               if (this.checkStopReached(this.bus.coords)) {
                 try {
                   const data = await this.busService.updateStopReached(this.bus.route.id, this.bus.lastStop.toString(), this.bus.direction);
+                  console.log('Stop reached: ', data);
                   let oldDirection = this.bus.direction;
                   let oldStop = this.bus.lastStop;
                   this.updateDirectionAndStop();
                   if (this.bus.direction != oldDirection || (this.onlyForward && oldStop === Object.keys(this.bus.route.stops.forwardStops).length - 1)) {
-                    this.busService.fixHistoryGaps(this.bus.route.id, oldDirection);
+                    const fix = await this.busService.fixHistoryGaps(this.bus.route.id, oldDirection);
+                    console.log('History gaps fixed: ', fix);
                     this.updateStopsAndDestination();
                   }
-                  console.log('Stop reached: ', data);
+                  
                 } catch (error) {
                   console.error('Error updating stop reached', error);
                 }
