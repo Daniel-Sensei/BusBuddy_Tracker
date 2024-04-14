@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ref, set, getDatabase } from 'firebase/database';
 import { Bus } from '../model/Bus';
 import { BusService } from '../service/bus.service';
@@ -83,7 +83,8 @@ export class TrackingPage implements OnInit, OnDestroy {
     private busService: BusService,
     private loginService: LoginService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private cdr: ChangeDetectorRef
   ) {
     this.firebaseDB = getDatabase();
   }
@@ -121,7 +122,7 @@ export class TrackingPage implements OnInit, OnDestroy {
 
   async startTracking() {
     this.permissionChecked = false;
-    
+
     try {
       LocalNotifications.requestPermissions().then((permission) => {
         this.BackgroundGeolocation.addWatcher(this.options, async (location, error) => {
@@ -138,7 +139,7 @@ export class TrackingPage implements OnInit, OnDestroy {
             console.error(error);
             return;
           }
-          if(!this.permissionChecked){
+          if (!this.permissionChecked) {
             this.tracking = true;
             // Inizializza il tempo trascorso a zero
             this.startTimer();
@@ -165,7 +166,7 @@ export class TrackingPage implements OnInit, OnDestroy {
                     console.log('History gaps fixed: ', fix);
                     this.updateStopsAndDestination();
                   }
-                  
+
                 } catch (error) {
                   console.error('Error updating stop reached', error);
                 }
@@ -223,7 +224,7 @@ export class TrackingPage implements OnInit, OnDestroy {
           //this.updateDirectionAndStop();
           break;
         }
-        else{
+        else {
           console.log("Distance from [", stop.name, "]= ", distance);
         }
       }
@@ -425,6 +426,9 @@ export class TrackingPage implements OnInit, OnDestroy {
 
       // Aggiorna il valore del timer nell'interfaccia
       this.timerValue = formattedTime;
+      // Forza il rilevamento dei cambiamenti nell'interfaccia utente di Angular
+      this.cdr.detectChanges();
+
     }, 1000);
   }
 

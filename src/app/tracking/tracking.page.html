@@ -17,65 +17,28 @@
   </div>
 
   <div id="container">
-    <div>
-      <ion-button class="start-button" *ngIf="!tracking" (click)="startTracking()"
-        [disabled]="this.bus.id == ''">AVVIA</ion-button>
-      <ion-button class="start-button" *ngIf="tracking" (click)="requestStopTracking()">STOP</ion-button>
-    </div><br><br>
-    <ion-label class="big-label">{{ timerValue }}</ion-label>
+
+    <ion-item lines="none" style="width: 100%; margin-bottom: 30px;">
+      <ion-icon slot="start" aria-hidden="true" name="bus-outline" size="large"></ion-icon>
+      <ion-label class="label">
+        <div class="bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+          bus.route.code.split('_')[0] }} - {{ destination }}</div>
+        <div>{{bus.route.company}}</div>
+        <div>Codice: {{bus.code}}</div>
+      </ion-label>
+    </ion-item>
+
+    <ion-button class="start-button" *ngIf="!tracking" (click)="startTracking()"
+      [disabled]="this.bus.id == ''">AVVIA</ion-button>
+    <ion-button class="start-button" *ngIf="tracking" (click)="requestStopTracking()">STOP</ion-button>
+    <br><br>
+
+    <ion-label class="timer">{{ timerValue }}</ion-label>
+
+    <ion-button class="logout-button" (click)="logout()" [disabled]="tracking">
+      Esci
+    </ion-button>
+
   </div>
-
-  <ion-modal #modal [isOpen]="!loading" [initialBreakpoint]="0.33" [breakpoints]="[0.33, 1]" [backdropDismiss]="false"
-    [backdropBreakpoint]="0.95" [handle]="true" [cssClass]="'modal-rounded'" handle-behavior="cycle">
-    <ng-template>
-      <ion-content class="ion-padding">
-
-        <div class="blank-space"></div>
-
-        <ion-toolbar class="top-segment">
-          <ion-title class="header">Dettagli Bus</ion-title>
-        </ion-toolbar>
-
-
-        <ion-item lines="none" style="margin-top: 10px;">
-          <ion-icon slot="start" aria-hidden="true" name="bus-outline" size="large"></ion-icon>
-          <ion-label class="label">
-            <div class="bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
-              bus.route.code.split('_')[0] }} - {{ destination }}</div>
-            <div>{{bus.route.company}}</div>
-          </ion-label>
-        </ion-item>
-
-        <ion-accordion-group>
-          <ion-accordion value="first" (click)="resizeModal()">
-            <ion-item slot="header" style="margin-right: 10px;">
-              <ion-icon slot="start" aria-hidden="true" name="time-outline" size="large"></ion-icon>
-              <ion-label class="label">
-                <div class="bold">Prossime fermate</div>
-                <div>Visualizza elenco delle fermate</div>
-              </ion-label>
-            </ion-item>
-
-            <div slot="content" style="margin-bottom: -2.5em;">
-
-              <!-- Next Stops -->
-              <ul>
-                <li *ngFor="let stop of stops; let i = index" [attr.data-content]="stop.name"
-                  [attr.address-content]="stop.address" [ngClass]="{ 'active': bus.lastStop == i }"></li>
-              </ul>
-
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
-
-        <div class="div-center" style="margin-top: -5px;">
-          <ion-button shape="round" style="--background: #eb445a;" (click)="logout()" [disabled]="tracking">
-            Esci
-          </ion-button>
-        </div>
-
-      </ion-content>
-    </ng-template>
-  </ion-modal>
 
 </ion-content>
