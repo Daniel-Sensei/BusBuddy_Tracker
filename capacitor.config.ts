@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'BusBus-Tracker',
+  appName: 'BusBuddy Tracker',
   webDir: 'www',
   server: {
     androidScheme: 'https'
