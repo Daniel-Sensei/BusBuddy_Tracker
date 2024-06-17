@@ -2,8 +2,6 @@ ion-toolbar {
     --background: var(--ion-color-primary);
 }
 
-/* BUTTON and TIMER */
-
 #container {
     display: flex;
     flex-direction: column;
@@ -58,7 +56,6 @@ ion-toolbar {
     justify-content: center;
 }
 
-/* Exit button */
 .div-center {
     display: flex;
     align-items: center;
@@ -69,7 +66,7 @@ ion-toolbar {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%; /* Altezza completa del contenitore */
+    height: 100%;
   }
   
   .centered-image {

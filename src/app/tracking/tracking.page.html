@@ -28,13 +28,6 @@
       </ion-label>
     </ion-item>
 
-    <!--
-    <ion-button class="start-button" *ngIf="!tracking" (click)="startTracking()"
-      [disabled]="this.bus.id == ''">AVVIA</ion-button>
-    <ion-button class="start-button" *ngIf="tracking" (click)="requestStopTracking()">STOP</ion-button>
-    <br>
-    -->
-
     <ion-label class="timer">{{ timerValue }}</ion-label>
 
     <div *ngIf="!tracking" class="image-container">
@@ -46,7 +39,8 @@
       <ion-img src="../../assets/bus-animation-no-bg.gif" class="centered-image"></ion-img>
     </div>
 
-    <br>
+    
+    <br><br>
 
     <div>
       <ion-button class="logout-button" (click)="logout()" [disabled]="tracking">
