@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 import { ViewChild } from '@angular/core';
 import { IonModal } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 
 
 @Component({
@@ -35,7 +37,7 @@ export class TrackingPage implements OnInit, OnDestroy {
     backgroundTitle: "Tracking You.",
     requestPermissions: true,
     stale: false,
-    distanceFilter: 0 // 50m of distance between updates
+    distanceFilter: 50, // 50m of distance between updates
   };
   permissionChecked = false;
 
@@ -345,7 +347,7 @@ export class TrackingPage implements OnInit, OnDestroy {
   // Aggiorna il metodo logout per visualizzare un popup di conferma prima del logout
   async logout() {
     const alert = await this.alertController.create({
-      header: 'Conferma',
+      header: 'Esci',
       message: 'Sei sicuro di voler effettuare il logout?',
       buttons: [
         {
@@ -356,7 +358,7 @@ export class TrackingPage implements OnInit, OnDestroy {
           }
         },
         {
-          text: 'Conferma',
+          text: 'Esci',
           handler: () => {
             // L'utente ha confermato, esegui il logout
             this.performLogout();

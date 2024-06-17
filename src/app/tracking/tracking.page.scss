@@ -17,10 +17,10 @@ ion-toolbar {
 
 
 .start-button {
-    --border-radius: 100%;
-    width: 220px;
-    height: 220px;
-    font-size: 30px;
+    --border-radius: 20px;
+    width: 180px;
+    height: 120px;
+    font-size: 28px;
     font-weight: bold;
 }
 
@@ -29,10 +29,16 @@ ion-toolbar {
     margin-bottom: 30px;
 }
 
+.squared-button {
+    height: 50px;
+    width: 110px;
+    border-radius: 20px;
+    margin-left: 15px;
+}
 .logout-button {
     --background: #eb445a;
     height: 50px;
-    width: 40%;
+    width: 110px;
     border-radius: 20px;
 }
 
@@ -58,3 +64,16 @@ ion-toolbar {
     align-items: center;
     justify-content: center;
 }
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Altezza completa del contenitore */
+  }
+  
+  .centered-image {
+    width: 90%;
+    height: 90%;
+  }
+  

@@ -4,7 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title style="text-align: center;">
-      BusBus Tracker
+      BusBuddy Tracker
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -28,16 +28,35 @@
       </ion-label>
     </ion-item>
 
+    <!--
     <ion-button class="start-button" *ngIf="!tracking" (click)="startTracking()"
       [disabled]="this.bus.id == ''">AVVIA</ion-button>
     <ion-button class="start-button" *ngIf="tracking" (click)="requestStopTracking()">STOP</ion-button>
-    <br><br>
+    <br>
+    -->
 
     <ion-label class="timer">{{ timerValue }}</ion-label>
 
-    <ion-button class="logout-button" (click)="logout()" [disabled]="tracking">
-      Esci
-    </ion-button>
+    <div *ngIf="!tracking" class="image-container">
+      <ion-img src="../../assets/bus-animation-no-bg-stop.gif" class="centered-image"></ion-img>
+    </div>
+
+
+    <div *ngIf="tracking" class="image-container">
+      <ion-img src="../../assets/bus-animation-no-bg.gif" class="centered-image"></ion-img>
+    </div>
+
+    <br>
+
+    <div>
+      <ion-button class="logout-button" (click)="logout()" [disabled]="tracking">
+        Esci
+      </ion-button>
+
+      <ion-button class="squared-button" *ngIf="!tracking" (click)="startTracking()"
+        [disabled]="this.bus.id == ''">AVVIA</ion-button>
+      <ion-button class="squared-button" *ngIf="tracking" (click)="requestStopTracking()">STOP</ion-button>
+    </div>
 
   </div>
 
